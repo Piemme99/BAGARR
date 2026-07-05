@@ -1,4 +1,5 @@
 use bevy::{prelude::*, window::PrimaryWindow};
+use rand::RngExt;
 
 use crate::player::Player;
 
@@ -50,38 +51,10 @@ fn spawn_enemies(
             Enemy,
             Mesh2d(mesh),
             MeshMaterial2d(material),
-            Transform::from_translation(generate_random_enemy_position(half_window).extend(0.0)),
+            Transform::from_translation(
+                generate_random_enemy_position(half_window, &mut rand::rng()).extend(0.0),
+            ),
         ));
-    }
-}
-
-#[derive(Copy, Clone)]
-enum Edge {
-    Top,
-    Bottom,
-    Right,
-    Left,
-}
-fn generate_random_enemy_position(half_window: Vec2, rng: &mut impl rand::Rng) -> Vec2 {
-    let edges = [Edge::Top, Edge::Bottom, Edge::Right, Edge::Left];
-    let edge = edges[rng::random_range(0..edges.len())];
-    match edge {
-        Edge::Top => Vec2::new(
-            rng::random_range(-half_window.x..half_window.x),
-            half_window.y,
-        ),
-        Edge::Bottom => Vec2::new(
-            rng::random_range(-half_window.x..half_window.x),
-            -half_window.y,
-        ),
-        Edge::Right => Vec2::new(
-            half_window.x,
-            rng::random_range(-half_window.y..half_window.y),
-        ),
-        Edge::Left => Vec2::new(
-            -half_window.x,
-            rng::random_range(-half_window.y..half_window.y),
-        ),
     }
 }
 
@@ -99,5 +72,35 @@ fn update_enemies(
             (player_transform.translation - enemy_transform.translation).normalize_or_zero();
         enemy_transform.translation += direction * ENEMY_SPEED * time.delta_secs();
         enemy_transform.rotation = Quat::from_rotation_arc_2d(Vec2::Y, direction.truncate())
+    }
+}
+
+#[derive(Copy, Clone)]
+enum Edge {
+    Top,
+    Bottom,
+    Right,
+    Left,
+}
+fn generate_random_enemy_position(half_window: Vec2, rng: &mut impl RngExt) -> Vec2 {
+    let edges = [Edge::Top, Edge::Bottom, Edge::Right, Edge::Left];
+    let edge = edges[rng.random_range(0..edges.len())];
+    match edge {
+        Edge::Top => Vec2::new(
+            rng.random_range(-half_window.x..half_window.x),
+            half_window.y,
+        ),
+        Edge::Bottom => Vec2::new(
+            rng.random_range(-half_window.x..half_window.x),
+            -half_window.y,
+        ),
+        Edge::Right => Vec2::new(
+            half_window.x,
+            rng.random_range(-half_window.y..half_window.y),
+        ),
+        Edge::Left => Vec2::new(
+            -half_window.x,
+            rng.random_range(-half_window.y..half_window.y),
+        ),
     }
 }
