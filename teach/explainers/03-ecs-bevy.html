@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAGARR · Le modèle ECS de Bevy</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2a313c; --accent:#ff8f3f; --accent2:#5db1ff; --good:#3fb950; --bad:#f85149;
+    --purple:#c77dff; --code:#0b0e13; --shadow:0 10px 40px rgba(0,0,0,.4);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:light){
+    :root{--bg:#f6f7f9;--panel:#fff;--panel2:#f0f2f5;--ink:#1b2027;--muted:#5a6672;
+      --line:#e2e6ea;--shadow:0 10px 40px rgba(0,0,0,.08);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:17px}
+  .wrap{max-width:840px;margin:0 auto;padding:0 22px 120px}
+  header.hero{padding:64px 22px 40px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 0%,rgba(199,125,255,.16),transparent 60%);}
+  .hero .kicker{font-family:var(--mono);color:var(--purple);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem}
+  .hero h1{font-size:2.4rem;margin:.3em 0 .2em;line-height:1.1;letter-spacing:-.02em}
+  .hero p{color:var(--muted);max-width:640px;margin:0 auto;font-size:1.05rem}
+  .prog{position:sticky;top:0;height:4px;background:transparent;z-index:20}
+  .prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--purple),var(--accent))}
+  h2{font-size:1.55rem;margin:2.6em 0 .5em;letter-spacing:-.01em;scroll-margin-top:40px}
+  h2 .n{font-family:var(--mono);color:var(--purple);font-size:1rem;margin-right:.5em}
+  h3{font-size:1.15rem;margin:1.6em 0 .4em}
+  p{margin:.7em 0}
+  a{color:var(--accent2);text-decoration:none;border-bottom:1px solid transparent}
+  a:hover{border-bottom-color:var(--accent2)}
+  code{font-family:var(--mono);background:var(--panel2);padding:.1em .4em;border-radius:5px;font-size:.86em}
+  pre{background:var(--code);color:#dbe3ea;border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;overflow:auto;font-family:var(--mono);font-size:.83rem;line-height:1.6}
+  pre .c{color:#6c7986}.kw{color:#ff8f3f}.ty{color:#5db1ff}
+  .lead{font-size:1.08rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+  .cite{font-size:.8rem;color:var(--muted);font-family:var(--mono)}.cite a{color:var(--muted)}
+  .try,.note{border-radius:14px;padding:16px 18px;margin:20px 0;border:1px solid var(--line)}
+  .try{background:linear-gradient(180deg,rgba(63,185,80,.09),transparent);border-color:rgba(63,185,80,.4)}
+  .note{background:rgba(93,177,255,.07);border-color:rgba(93,177,255,.35)}
+  .try .tag,.note .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;display:inline-block;margin-bottom:6px}
+  .try .tag{color:var(--good)}.note .tag{color:var(--accent2)}
+  .defs{display:grid;gap:12px;margin:18px 0}
+  .def{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:12px;padding:14px 18px}
+  .def b{font-family:var(--mono)}
+  /* ECS table */
+  .ecs{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin:20px 0;overflow-x:auto}
+  .ecs table{width:100%;border-collapse:separate;border-spacing:6px;min-width:520px}
+  .ecs th{font-family:var(--mono);font-size:.78rem;color:var(--muted);text-align:center;padding:4px}
+  .ecs td{text-align:center;padding:10px 8px;border-radius:8px;font-family:var(--mono);font-size:.82rem;
+    background:var(--panel2);border:1px dashed var(--line);color:var(--muted);cursor:pointer;transition:.12s;user-select:none}
+  .ecs td.eid{background:var(--code);color:var(--purple);border-style:solid;cursor:default;font-weight:700}
+  .ecs td.on{background:rgba(93,177,255,.16);border-style:solid;border-color:var(--accent2);color:var(--ink)}
+  .ecs .hint{color:var(--muted);font-size:.82rem;margin-top:12px;text-align:center}
+  /* required-components demo */
+  .req{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin:20px 0}
+  .req button{font-family:var(--mono);background:var(--code);color:var(--accent);border:1px solid var(--accent);
+    border-radius:9px;padding:10px 16px;cursor:pointer;font-size:.9rem}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;min-height:8px}
+  .chip{font-family:var(--mono);font-size:.8rem;padding:6px 12px;border-radius:20px;background:var(--panel2);
+    border:1px solid var(--line);opacity:0;transform:translateY(6px);transition:.3s}
+  .chip.show{opacity:1;transform:none}
+  .chip.seed{background:rgba(255,143,63,.16);border-color:var(--accent);color:var(--accent)}
+  .chip.auto{background:rgba(63,185,80,.12);border-color:rgba(63,185,80,.5);color:var(--good)}
+  .quiz{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:12px;padding:18px 20px;margin:22px 0}
+  .quiz .q{font-weight:600;margin-bottom:12px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;padding:11px 14px;margin:7px 0;cursor:pointer;font-size:.95rem;transition:.12s;font-family:inherit}
+  .opt:hover{border-color:var(--purple)}
+  .opt.correct{border-color:var(--good);background:rgba(63,185,80,.14)}
+  .opt.wrong{border-color:var(--bad);background:rgba(248,81,73,.12)}
+  .fb{margin-top:10px;font-size:.9rem;color:var(--muted);display:none}.fb.show{display:block}
+  .flow{display:flex;align-items:center;gap:0;margin:18px 0;flex-wrap:wrap}
+  .fnode{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+  .fnode b{font-family:var(--mono);font-size:.88rem}.fnode span{display:block;color:var(--muted);font-size:.76rem;margin-top:3px}
+  .fsep{color:var(--purple);font-size:1.3rem;padding:0 6px}
+  footer{border-top:1px solid var(--line);margin-top:60px;padding-top:24px;color:var(--muted);font-size:.85rem}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:22px}
+  .toc a{font-family:var(--mono);font-size:.78rem;background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:20px;color:var(--muted)}
+  .toc a:hover{border-color:var(--purple);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="prog"><i id="pbar"></i></div>
+
+<header class="hero">
+  <div class="kicker">BAGARR · Fiche 03</div>
+  <h1>Le modèle ECS de Bevy</h1>
+  <p>Entity, Component, System, World, App, Schedule, Commands, spawn, Bundle, required components…
+     tout le vocabulaire de ton <code>main.rs</code>, en une carte mentale.</p>
+  <div class="toc">
+    <a href="#idee">1 · La grande idée</a>
+    <a href="#ecw">2 · Entity · Component · World</a>
+    <a href="#sys">3 · System</a>
+    <a href="#app">4 · App · Plugin · Schedule</a>
+    <a href="#cmd">5 · Commands · spawn</a>
+    <a href="#bundle">6 · Bundle · required</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+<p class="lead">Tout Bevy repose sur un seul patron d'architecture : <b>ECS — Entity, Component,
+System</b>. Une fois ces trois mots en place, tout le reste (<code>App</code>, <code>Commands</code>,
+<code>spawn</code>…) n'en est qu'un outillage. C'est <em>le</em> concept à internaliser.</p>
+
+<!-- 1 -->
+<h2 id="idee"><span class="n">01</span>La grande idée : composition de données, pas héritage</h2>
+<p>Dans une approche objet classique, tu ferais peut-être
+<code>class Enemy extends Character extends GameObject</code>. Bevy prend le chemin inverse : un objet
+de jeu n'est pas une classe, c'est un <b>sac de composants (des données)</b> assemblés, et la logique
+vit <b>à l'extérieur</b>, dans des fonctions qui balaient tous les objets partageant certaines
+données.</p>
+<div class="defs">
+  <div class="def"><b>Entity</b> — un simple <b>identifiant</b> (un numéro). Ne contient aucune donnée
+    par lui-même. C'est « la chose », le joueur, un ennemi, une balle.</div>
+  <div class="def"><b>Component</b> — une <b>donnée</b> attachée à une entité : position, vie,
+    vitesse, couleur… En Bevy, un simple <code>struct</code> avec <code>#[derive(Component)]</code>.</div>
+  <div class="def"><b>System</b> — une <b>fonction de logique</b> qui s'exécute sur toutes les entités
+    portant certains composants (ex : « déplace tout ce qui a Position + Velocity »).</div>
+</div>
+<p class="cite">Sources : <a href="https://bevy.org/learn/quick-start/getting-started/ecs/">Bevy — Quick Start : ECS</a> · <a href="https://bevy-cheatbook.github.io/programming/ec.html">Cheat Book — Entities & Components</a></p>
+
+<!-- 2 -->
+<h2 id="ecw"><span class="n">02</span>Entity + Component + World = une base de données</h2>
+<p>Le meilleur modèle mental : une <b>table</b>. Chaque <b>entité</b> est une ligne (son id), chaque
+type de <b>composant</b> est une colonne. Une case cochée = cette entité possède ce composant. Le
+<b>World</b> est la base entière (toutes les entités et leurs composants).</p>
+<div class="ecs">
+  <div id="ecs-table"></div>
+  <div class="hint">👆 Clique les cases pour donner/retirer un composant. Un « ennemi » = une entité
+    avec Position + Velocity + Health + Enemy. Un système ne verra que les lignes ayant les colonnes
+    qu'il demande.</div>
+</div>
+<div class="note"><span class="tag">Pourquoi ce design</span> Ranger les données par composant (par
+colonne) rend le parcours ultra-rapide pour le CPU (mémoire contiguë) et permet à Bevy de faire
+tourner des systèmes <b>en parallèle</b> automatiquement quand ils ne touchent pas aux mêmes données.
+C'est la raison de perf derrière l'ergonomie.</div>
+
+<!-- 3 -->
+<h2 id="sys"><span class="n">03</span>System : de la logique injectée</h2>
+<p>Un système est <b>juste une fonction</b>. Sa signature est un contrat : tu déclares ce dont tu as
+besoin en paramètres, et Bevy te le <b>fournit automatiquement</b> (injection de dépendances). Ton
+<code>setup</code> en est un :</p>
+<pre><span class="kw">fn</span> setup(<span class="kw">mut</span> commands: <span class="ty">Commands</span>) { ... }
+<span class="c">//              ↑ "j'ai besoin de pouvoir créer des entités" → Bevy fournit Commands</span></pre>
+<p>Les paramètres possibles (on les découvrira au fil des phases) : <code>Commands</code> (créer/
+détruire), <code>Query&lt;…&gt;</code> (lire/écrire les composants d'entités existantes — la
+<b>prochaine</b> brique, en Phase 1), <code>Res&lt;T&gt;</code> (lire une ressource globale, ex. le
+temps), etc.</p>
+
+<!-- 4 -->
+<h2 id="app"><span class="n">04</span>App, Plugin &amp; Schedule : qui orchestre, et quand</h2>
+<div class="defs">
+  <div class="def"><b>App</b> — l'application entière. On la <b>construit</b> (builder) en y branchant
+    des plugins et des systèmes, puis <code>.run()</code> lance la boucle de jeu.</div>
+  <div class="def"><b>Plugin</b> — un <b>paquet</b> de systèmes + config prêt à brancher.
+    <code>DefaultPlugins</code> t'apporte fenêtre, rendu, entrées… Plus tard tu écriras tes propres
+    plugins (<code>PlayerPlugin</code>, <code>EnemyPlugin</code>) pour ranger ton code.</div>
+  <div class="def"><b>Schedule</b> — <b>quand</b> un système tourne. Les deux qu'on utilisera :
+    <code>Startup</code> (une fois au lancement) et <code>Update</code> (à chaque frame).</div>
+</div>
+<div class="flow">
+  <div class="fnode"><b>App::new()</b><span>construit</span></div>
+  <div class="fsep">→</div>
+  <div class="fnode"><b>add_plugins</b><span>branche des paquets</span></div>
+  <div class="fsep">→</div>
+  <div class="fnode"><b>add_systems</b><span>place tes fn dans un schedule</span></div>
+  <div class="fsep">→</div>
+  <div class="fnode"><b>run()</b><span>boucle de jeu</span></div>
+</div>
+
+<div class="quiz" data-key="update">
+  <div class="q">Tu veux déplacer le joueur en continu tant qu'une touche est enfoncée. Dans quel
+    schedule mets-tu ton système ?</div>
+  <button class="opt" data-k="startup">Startup</button>
+  <button class="opt" data-k="update">Update</button>
+  <div class="fb"></div>
+</div>
+
+<!-- 5 -->
+<h2 id="cmd"><span class="n">05</span>Commands, <code>spawn</code> &amp; <code>despawn</code></h2>
+<p><b>Commands</b> est une <b>file d'instructions</b> pour les changements <em>structurels</em> :
+créer une entité (<code>spawn</code>), la détruire (<code>despawn</code>), lui ajouter/retirer un
+composant. Tu l'as utilisé : <code>commands.spawn(Camera2d)</code>.</p>
+<div class="note"><span class="tag">Pourquoi « file » et pas immédiat</span> Modifier la structure
+du World en plein milieu d'un système (pendant que d'autres le lisent, potentiellement en parallèle)
+serait dangereux. Bevy <b>met donc tes commandes en attente</b> et les applique à un point de
+synchronisation sûr, à la fin. D'où le nom : ce sont des <em>commandes</em> à exécuter, pas des
+actions immédiates.</div>
+<p class="cite">Source : <a href="https://bevy-cheatbook.github.io/programming/commands.html">Cheat Book — Commands</a></p>
+
+<!-- 6 -->
+<h2 id="bundle"><span class="n">06</span>Bundle &amp; Required Components</h2>
+<p>Un <b>Bundle</b> = une <b>collection de composants</b> qu'on ajoute d'un coup à une entité.
+Un <b>tuple</b> de composants <em>est</em> un bundle :</p>
+<pre>commands.spawn((<span class="ty">Player</span>, <span class="ty">Transform</span>::default(), <span class="ty">Sprite</span>::from_image(...)));
+<span class="c">//              └──────────────── un tuple = un Bundle : 3 composants d'un coup ────┘</span></pre>
+
+<h3>Le twist Bevy 0.15+ : les <em>required components</em></h3>
+<p>Avant, on utilisait des <b>bundle-structs</b> tout faits (<code>Camera2dBundle</code>,
+<code>SpriteBundle</code>…). Ils sont <b>dépréciés depuis Bevy 0.15</b>, remplacés par les
+<b>required components</b> : un composant peut déclarer, via <code>#[require(...)]</code>, d'autres
+composants qui seront <b>ajoutés automatiquement</b> si tu ne les fournis pas. C'est exactement
+pourquoi <code>spawn(Camera2d)</code> tout seul t'a donné une caméra fonctionnelle.</p>
+
+<div class="req">
+  <div style="font-family:var(--mono);font-size:.9rem;margin-bottom:4px">
+    <span style="color:var(--accent)">commands.spawn(</span>Camera2d<span style="color:var(--accent)">);</span></div>
+  <button id="expand">▶ Voir ce que Bevy ajoute vraiment</button>
+  <div class="chips" id="chips"></div>
+  <div class="hint" style="color:var(--muted);font-size:.8rem;margin-top:12px">
+    <span style="color:var(--accent)">■</span> ce que tu écris ·
+    <span style="color:var(--good)">■</span> ajouté automatiquement via <code>#[require]</code>
+    (vérifié dans le source de Bevy 0.19)</div>
+</div>
+<p class="cite">Sources : <a href="https://bevy.org/news/bevy-0-15/">Bevy 0.15 — Required Components</a> · <a href="https://bevy-cheatbook.github.io/programming/bundle.html">Cheat Book — Bundles</a> · source <code>bevy_camera-0.19.0</code></p>
+
+<div class="quiz" data-key="req">
+  <div class="q">En Bevy 0.19, quelle est la façon idiomatique de faire apparaître une caméra 2D ?</div>
+  <button class="opt" data-k="bundle">commands.spawn(Camera2dBundle::default())</button>
+  <button class="opt" data-k="req">commands.spawn(Camera2d)</button>
+  <button class="opt" data-k="new">Camera2d::new().build()</button>
+  <div class="fb"></div>
+</div>
+
+<div class="try"><span class="tag">Essaie ça</span> <b>Touche à une ressource globale.</b> Le fond gris,
+c'est une <em>Resource</em> nommée <code>ClearColor</code> (une donnée unique, pas attachée à une
+entité). Ajoute cette ligne dans le builder de ton <code>App</code>, avant <code>.run()</code> :
+<pre>.insert_resource(<span class="ty">ClearColor</span>(<span class="ty">Color</span>::srgb(0.1, 0.2, 0.35)))</pre>
+Relance avec <code>cargo r</code> : le fond devient bleu nuit. Tu viens de manipuler le 4ᵉ grand
+concept ECS — la <b>Resource</b> (donnée globale unique), en complément des composants (données
+par entité).</div>
+
+<h2 id="recap"><span class="n">✦</span>La carte mentale en une phrase</h2>
+<div class="card"><p style="margin:0">Une <b>Entity</b> est un id ; on lui accroche des
+<b>Components</b> (données) ; le <b>World</b> est la base qui contient tout ça ; les <b>Systems</b>
+(fonctions) lisent/écrivent ces composants ; l'<b>App</b> assemble des <b>Plugins</b> et range les
+systèmes dans des <b>Schedules</b> (Startup/Update) ; <b>Commands</b> crée/détruit les entités
+(<code>spawn</code>/<code>despawn</code>) de façon différée ; un <b>Bundle</b> (souvent un tuple)
+ajoute plusieurs composants d'un coup, et les <b>required components</b> (<code>#[require]</code>) en
+tirent d'autres automatiquement.</p></div>
+
+<footer>
+  <p><b>Sources</b> (dans <code>teach/RESOURCES.md</code>) :
+  <a href="https://bevy.org/learn/quick-start/getting-started/ecs/">Bevy Quick Start — ECS</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/ec.html">Cheat Book — Entities/Components</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/commands.html">Commands</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/bundle.html">Bundles</a> ·
+  <a href="https://bevy.org/news/bevy-0-15/">Required Components (0.15)</a></p>
+  <p>BAGARR · carnet <code>teach/</code> · fiche 03</p>
+</footer>
+</div>
+
+<script>
+const pbar=document.getElementById('pbar');
+addEventListener('scroll',()=>{const h=document.documentElement;pbar.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+
+// ECS table
+const cols=["Position","Velocity","Health","Enemy","Camera2d"];
+const rows=[
+  {id:"Entity 0 (joueur)",on:[1,1,1,0,0]},
+  {id:"Entity 1 (ennemi)",on:[1,1,1,1,0]},
+  {id:"Entity 2 (caméra)",on:[0,0,0,0,1]},
+];
+let html="<table><tr><th></th>"+cols.map(c=>"<th>"+c+"</th>").join("")+"</tr>";
+rows.forEach((r,ri)=>{html+="<tr><td class='eid'>"+r.id+"</td>"+
+  r.on.map((v,ci)=>"<td class='cell "+(v?"on":"")+"' data-r='"+ri+"' data-c='"+ci+"'>"+(v?"✓":"·")+"</td>").join("")+"</tr>";});
+html+="</table>";
+document.getElementById('ecs-table').innerHTML=html;
+document.querySelectorAll('.ecs .cell').forEach(td=>td.onclick=()=>{
+  td.classList.toggle('on');td.textContent=td.classList.contains('on')?"✓":"·";});
+
+// required components demo
+const seed=["Camera2d"];
+const auto=["Camera","Projection (Orthographic)","Frustum","Transform","GlobalTransform","Visibility","…"];
+document.getElementById('expand').onclick=function(){
+  this.disabled=true;this.textContent="✓ spawn(Camera2d) déplie en :";
+  const box=document.getElementById('chips');
+  const all=seed.map(s=>({t:s,c:'seed'})).concat(auto.map(a=>({t:a,c:'auto'})));
+  all.forEach((o,i)=>{const el=document.createElement('span');el.className='chip '+o.c;el.textContent=o.t;
+    box.appendChild(el);setTimeout(()=>el.classList.add('show'),80*i);});
+};
+
+// quizzes
+document.querySelectorAll('.quiz').forEach(q=>{
+  const key=q.dataset.key,fb=q.querySelector('.fb');
+  const msg={
+    update:"Update tourne à chaque frame → parfait pour lire les entrées et bouger en continu. Startup ne s'exécute qu'une fois.",
+    req:"En 0.19 les bundle-structs (Camera2dBundle) sont dépréciés : on spawn le composant Camera2d, et #[require] apporte le reste.",
+  };
+  q.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{
+    q.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.k===key)x.classList.add('correct');});
+    const ok=o.dataset.k===key;if(!ok)o.classList.add('wrong');
+    fb.textContent=(ok?"✅ ":"❌ ")+(msg[key]||"");fb.classList.add('show');
+  });
+});
+</script>
+</body>
+</html>

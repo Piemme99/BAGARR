@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAGARR · Enums, move, Copy &amp; Clone</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2a313c; --accent:#ff8f3f; --accent2:#5db1ff; --good:#3fb950; --bad:#f85149;
+    --purple:#c77dff; --code:#0b0e13; --shadow:0 10px 40px rgba(0,0,0,.4);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:light){
+    :root{--bg:#f6f7f9;--panel:#fff;--panel2:#f0f2f5;--ink:#1b2027;--muted:#5a6672;
+      --line:#e2e6ea;--shadow:0 10px 40px rgba(0,0,0,.08);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:17px}
+  .wrap{max-width:840px;margin:0 auto;padding:0 22px 120px}
+  header.hero{padding:60px 22px 36px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 0%,rgba(199,125,255,.16),transparent 60%);}
+  .hero .kicker{font-family:var(--mono);color:var(--purple);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem}
+  .hero h1{font-size:2.2rem;margin:.3em 0 .2em;line-height:1.1}
+  .hero p{color:var(--muted);max-width:600px;margin:0 auto}
+  .prog{position:sticky;top:0;height:4px;background:transparent;z-index:20}
+  .prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--purple),var(--accent))}
+  h2{font-size:1.45rem;margin:2.4em 0 .5em;scroll-margin-top:20px}
+  h2 .n{font-family:var(--mono);color:var(--purple);font-size:1rem;margin-right:.5em}
+  h3{font-size:1.12rem;margin:1.5em 0 .4em}
+  p{margin:.7em 0}
+  code{font-family:var(--mono);background:var(--panel2);padding:.1em .4em;border-radius:5px;font-size:.85em}
+  pre{background:var(--code);color:#dbe3ea;border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.6}
+  pre .c{color:#6c7986}.kw{color:#ff8f3f}.ty{color:#5db1ff}.fn{color:#c77dff}.st{color:#7ee787}
+  a{color:var(--accent2);text-decoration:none}a:hover{text-decoration:underline}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+  .cite{font-size:.8rem;color:var(--muted);font-family:var(--mono)}.cite a{color:var(--muted)}
+  .try,.note{border-radius:14px;padding:16px 18px;margin:20px 0;border:1px solid var(--line)}
+  .note{background:rgba(93,177,255,.07);border-color:rgba(93,177,255,.35)}
+  .try{background:linear-gradient(180deg,rgba(63,185,80,.09),transparent);border-color:rgba(63,185,80,.4)}
+  .note .tag,.try .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:6px}
+  .note .tag{color:var(--accent2)}.try .tag{color:var(--good)}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:22px}
+  .toc a{font-family:var(--mono);font-size:.78rem;background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:20px;color:var(--muted)}
+  .toc a:hover{border-color:var(--purple);color:var(--ink)}
+  /* move/copy sim */
+  .sim{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin:20px 0}
+  .sim .toggle{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .sim .toggle button{font-family:var(--mono);font-size:.82rem;background:var(--panel2);border:1px solid var(--line);
+    color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}
+  .sim .toggle button.on{border-color:var(--purple);color:var(--purple);background:rgba(199,125,255,.12)}
+  .boxes{display:flex;gap:16px;flex-wrap:wrap}
+  .box{flex:1;min-width:130px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;transition:.2s}
+  .box .nm{font-family:var(--mono);color:var(--accent2)}
+  .box .val{font-family:var(--mono);font-size:1.1rem;margin-top:6px}
+  .box.invalid{opacity:.4;border-style:dashed}
+  .box.invalid .val{text-decoration:line-through;color:var(--bad)}
+  .verdict{margin-top:14px;font-size:.92rem;color:var(--muted);min-height:2.4em}
+  .verdict b{color:var(--ink)}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.88rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{background:var(--panel2);font-family:var(--mono);font-size:.76rem}
+  .quiz{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:12px;padding:18px 20px;margin:22px 0}
+  .quiz .q{font-weight:600;margin-bottom:12px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;padding:11px 14px;margin:7px 0;cursor:pointer;font-size:.95rem;transition:.12s;font-family:inherit}
+  .opt:hover{border-color:var(--purple)}
+  .opt.correct{border-color:var(--good);background:rgba(63,185,80,.14)}
+  .opt.wrong{border-color:var(--bad);background:rgba(248,81,73,.12)}
+  .fb{margin-top:10px;font-size:.9rem;color:var(--muted);display:none}.fb.show{display:block}
+  footer{border-top:1px solid var(--line);margin-top:50px;padding-top:22px;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="prog"><i id="pbar"></i></div>
+
+<header class="hero">
+  <div class="kicker">BAGARR · Fiche 07</div>
+  <h1>Enums, <code>move</code>, Copy &amp; Clone</h1>
+  <p>Deux piliers de Rust : modéliser un choix fini avec un <code>enum</code>, et comprendre pourquoi
+     indexer un tableau t'a forcé à <code>#[derive(Copy)]</code>.</p>
+  <div class="toc">
+    <a href="#enum">1 · Les enums</a>
+    <a href="#data">2 · Variantes avec données</a>
+    <a href="#move">3 · Ownership &amp; move</a>
+    <a href="#copyclone">4 · Copy vs Clone</a>
+    <a href="#derive">5 · derive &amp; ton Edge</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- 1 -->
+<h2 id="enum"><span class="n">01</span>Un enum = « exactement une valeur parmi un ensemble fini »</h2>
+<p>Un <code>enum</code> définit un type dont une valeur est <b>exactement l'une</b> de variantes
+nommées. Ton <code>Edge</code> :</p>
+<pre><span class="kw">enum</span> <span class="ty">Edge</span> { <span class="st">Top</span>, <span class="st">Bottom</span>, <span class="st">Left</span>, <span class="st">Right</span> }
+<span class="c">// une valeur de type Edge est SOIT Top, SOIT Bottom, SOIT Left, SOIT Right — jamais deux, jamais autre chose</span></pre>
+<p>La force : le compilateur <b>connaît toutes les variantes</b>. Un <code>match</code> qui les couvre
+toutes est <b>exhaustif</b> — pas besoin de <code>_</code>, et si tu ajoutes une variante plus tard,
+le compilateur t'oblige à traiter le nouveau cas partout. C'est ce que tu as gagné en passant de
+<code>match sur i32</code> (qui exigeait un <code>_</code>) à <code>match edge</code>.</p>
+<p class="cite">Source : <a href="https://doc.rust-lang.org/book/ch06-00-enums.html">Rust Book — Ch.6 Enums</a></p>
+
+<!-- 2 -->
+<h2 id="data"><span class="n">02</span>Les variantes peuvent porter des données</h2>
+<p>Contrairement à un enum C (juste des entiers nommés), une variante Rust peut <b>contenir</b> des
+données, différentes selon la variante :</p>
+<pre><span class="kw">enum</span> <span class="ty">Attaque</span> {
+    <span class="st">Poing</span>,                       <span class="c">// rien</span>
+    <span class="st">Projectile</span>(<span class="ty">Vec2</span>),            <span class="c">// une direction</span>
+    <span class="st">Zone</span> { rayon: <span class="ty">f32</span>, degats: <span class="ty">u32</span> },  <span class="c">// des champs nommés</span>
+}</pre>
+<p>Et <code>match</code> <b>extrait</b> ces données en même temps qu'il distingue la variante :</p>
+<pre><span class="kw">match</span> attaque {
+    <span class="ty">Attaque</span>::<span class="st">Poing</span> => { <span class="c">/* … */</span> }
+    <span class="ty">Attaque</span>::<span class="st">Projectile</span>(dir) => { <span class="c">// dir est le Vec2</span> }
+    <span class="ty">Attaque</span>::<span class="st">Zone</span> { rayon, degats } => { <span class="c">// rayon et degats dispo</span> }
+}</pre>
+<div class="note"><span class="tag">Tu en utilises déjà !</span> <code>Option&lt;T&gt;</code> et
+<code>Result&lt;T, E&gt;</code> <b>sont des enums</b> de la std :
+<pre><span class="kw">enum</span> <span class="ty">Option</span>&lt;T&gt; { <span class="st">Some</span>(T), <span class="st">None</span> }
+<span class="kw">enum</span> <span class="ty">Result</span>&lt;T, E&gt; { <span class="st">Ok</span>(T), <span class="st">Err</span>(E) }</pre>
+Ton <code>let Ok(mut transform) = query.single_mut() else {…}</code>, c'est un match sur l'enum
+<code>Result</code> qui extrait le <code>T</code> de la variante <code>Ok</code>. Tu faisais du
+pattern matching sans le savoir.</div>
+
+<!-- 3 -->
+<h2 id="move"><span class="n">03</span>Ownership &amp; <code>move</code> : pourquoi indexer « sort » une valeur</h2>
+<p>Règle d'or de Rust : <b>chaque valeur a un seul propriétaire</b>. Quand tu fais
+<code>let b = a;</code>, par défaut Rust <b>déplace</b> (<i>move</i>) la valeur de <code>a</code> vers
+<code>b</code> — et <code>a</code> devient <b>inutilisable</b> (pour éviter deux propriétaires du même
+truc).</p>
+<p>Or un tableau <b>possède</b> ses éléments. <code>edges[i]</code> essaie de <b>sortir</b> l'élément
+« à la valeur » → ça laisserait un <b>trou</b> dans le tableau (un <i>move</i> partiel) → Rust
+<b>refuse</b> (c'était ton erreur E0508). Sauf si le type est <b>Copy</b> (§4).</p>
+<p class="cite">Source : <a href="https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html">Rust Book — Ch.4.1 Ownership</a></p>
+
+<!-- 4 -->
+<h2 id="copyclone"><span class="n">04</span>Copy vs Clone : dupliquer, implicite ou explicite</h2>
+<p>Certains types sont <b>triviaux à dupliquer</b> (juste recopier des octets, aucun coût caché) :
+les entiers, <code>bool</code>, <code>char</code>, les flottants, et les enums/structs qui ne
+contiennent <em>que</em> ça. Pour eux existe le trait <b><code>Copy</code></b> :</p>
+<div class="sim">
+  <div class="toggle">
+    <button class="on" data-t="copy">Type <b>Copy</b> (ex: i32, Edge)</button>
+    <button data-t="move">Type <b>non-Copy</b> (ex: String, Vec)</button>
+  </div>
+  <p style="font-family:var(--mono);font-size:.85rem;margin:.2em 0 1em">let a = …;&nbsp;&nbsp;<b>let b = a;</b>&nbsp;&nbsp;/* puis on relit a */</p>
+  <div class="boxes">
+    <div class="box" id="ba"><div class="nm">a</div><div class="val" id="va">42</div></div>
+    <div class="box" id="bb"><div class="nm">b</div><div class="val" id="vb">42</div></div>
+  </div>
+  <div class="verdict" id="verdict"></div>
+</div>
+<table>
+  <tr><th></th><th><code>Copy</code></th><th><code>Clone</code></th></tr>
+  <tr><td>déclenché</td><td>implicitement (assignation, indexation, passage)</td><td>explicitement, via <code>.clone()</code></td></tr>
+  <tr><td>coût</td><td>toujours bon marché (copie d'octets)</td><td>peut être cher (copie du tas : String, Vec…)</td></tr>
+  <tr><td>l'original après</td><td>reste valide</td><td>reste valide</td></tr>
+  <tr><td>pour qui</td><td>types « plats » (pas de tas)</td><td>presque tout</td></tr>
+</table>
+<p><b>Lien entre les deux</b> : <code>Copy</code> exige <code>Clone</code> (tout ce qui est copiable
+est aussi clonable). D'où le duo <code>#[derive(Clone, Copy)]</code>. Un type qui contient du tas
+(<code>String</code>, <code>Vec</code>, un <code>Handle</code>…) <b>ne peut pas être <code>Copy</code></b>
+(dupliquer bêtement les octets casserait la propriété du tas) — au mieux <code>Clone</code>.</p>
+<p class="cite">Source : <a href="https://doc.rust-lang.org/book/appendix-03-derivable-traits.html">Rust Book — Appendix C : Derivable Traits</a></p>
+
+<!-- 5 -->
+<h2 id="derive"><span class="n">05</span><code>derive</code> : et donc, ton <code>Edge</code></h2>
+<p>Un <b>trait</b> = un ensemble de comportements qu'un type peut fournir. Écrire l'implémentation à la
+main est fastidieux pour des traits « mécaniques » → <code>#[derive(...)]</code> demande au compilateur
+de <b>générer l'implémentation</b> pour toi.</p>
+<pre><span class="kw">#[derive(Debug, Clone, Copy)]</span>
+<span class="kw">enum</span> <span class="ty">Edge</span> { <span class="st">Top</span>, <span class="st">Bottom</span>, <span class="st">Left</span>, <span class="st">Right</span> }</pre>
+<p>Pourquoi ces trois :</p>
+<ul>
+  <li><code>Copy</code> → indexer <code>edges[i]</code> <b>copie</b> la variante au lieu de la <i>move</i>
+    hors du tableau (règle ton erreur). Un enum sans données est trivialement copiable.</li>
+  <li><code>Clone</code> → requis par <code>Copy</code> (obligatoire de l'avoir aussi).</li>
+  <li><code>Debug</code> → permet d'afficher avec <code>{:?}</code> (pratique pour déboguer).</li>
+</ul>
+
+<div class="quiz" data-key="no">
+  <div class="q">Peux-tu mettre <code>#[derive(Copy)]</code> sur
+    <code>struct Joueur { nom: String, pv: u32 }</code> ?</div>
+  <button class="opt" data-k="yes">Oui, comme pour Edge</button>
+  <button class="opt" data-k="no">Non : elle contient une String (données sur le tas) → pas copiable bit-à-bit ; seulement Clone</button>
+  <button class="opt" data-k="never">Non, on ne peut jamais dériver Copy sur une struct</button>
+  <div class="fb"></div>
+</div>
+
+<div class="try"><span class="tag">Essaie ça (mental)</span> Regarde tes types de BAGARR : <code>Vec2</code>,
+<code>Vec3</code>, <code>Color</code> sont <code>Copy</code> (que des nombres) — c'est pour ça que tu
+les passes partout sans <code>.clone()</code>. À l'inverse, un <code>Handle&lt;Mesh&gt;</code> n'est
+que <code>Clone</code> (il compte des références) : tu le <code>clone()</code>rais si besoin, il ne se
+copie pas tout seul.</div>
+
+<h2 id="recap"><span class="n">✦</span>Récap</h2>
+<div class="card"><p style="margin:0">Un <b>enum</b> = une valeur parmi un ensemble fini de variantes
+(qui peuvent porter des données) ; <code>match</code> les distingue de façon <b>exhaustive</b>
+(d'où « pas de <code>_</code> »). Par défaut, assigner/indexer <b>déplace</b> (<i>move</i>) une valeur
+et invalide l'original ; les types « plats » marqués <b><code>Copy</code></b> sont copiés à la place
+(original conservé), et <b><code>Clone</code></b> duplique explicitement (potentiellement cher). Ton
+<code>Edge</code>, enum sans données, dérive <code>Copy</code> pour que <code>edges[i]</code> copie au
+lieu de <i>move</i>.</p></div>
+
+<footer>
+  <p><b>Sources</b> (dans <code>teach/RESOURCES.md</code>) :
+  <a href="https://doc.rust-lang.org/book/ch06-00-enums.html">Rust Book — Enums</a> ·
+  <a href="https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html">Ownership</a> ·
+  <a href="https://doc.rust-lang.org/book/appendix-03-derivable-traits.html">Derivable Traits</a> ·
+  <a href="https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html">Pattern Syntax</a></p>
+  <p>BAGARR · carnet <code>teach/</code> · fiche 07</p>
+</footer>
+</div>
+
+<script>
+const pbar=document.getElementById('pbar');
+addEventListener('scroll',()=>{const h=document.documentElement;pbar.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+
+// move/copy sim
+const ba=document.getElementById('ba'), bb=document.getElementById('bb'),
+      va=document.getElementById('va'), vb=document.getElementById('vb'),
+      verdict=document.getElementById('verdict');
+function setMode(t){
+  document.querySelectorAll('.sim .toggle button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  if(t==='copy'){
+    va.textContent='42'; vb.textContent='42';
+    ba.classList.remove('invalid'); bb.classList.remove('invalid');
+    verdict.innerHTML="<b>Copy</b> : <code>b</code> reçoit une <b>copie</b>. <code>a</code> reste valide → relire <code>a</code> compile. C'est le cas de <code>i32</code>, <code>Edge</code>, <code>Vec2</code>…";
+  } else {
+    va.textContent='"hello"'; vb.textContent='"hello"';
+    ba.classList.add('invalid'); bb.classList.remove('invalid');
+    verdict.innerHTML="<b>Move</b> : la valeur est <b>déplacée</b> dans <code>b</code>. <code>a</code> devient inutilisable → relire <code>a</code> <b style='color:var(--bad)'>ne compile pas</b>. C'est le cas de <code>String</code>, <code>Vec</code>, <code>Handle</code>…";
+  }
+}
+document.querySelectorAll('.sim .toggle button').forEach(b=>b.onclick=()=>setMode(b.dataset.t));
+setMode('copy');
+
+document.querySelectorAll('.quiz').forEach(q=>{
+  const key=q.dataset.key,fb=q.querySelector('.fb');
+  const msg={no:"Exact : une String possède des données sur le tas ; copier ses octets créerait deux propriétaires du même tas → interdit. On peut dériver Clone (copie profonde), pas Copy."};
+  q.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{
+    q.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.k===key)x.classList.add('correct');});
+    const ok=o.dataset.k===key;if(!ok)o.classList.add('wrong');
+    fb.textContent=(ok?"✅ ":"❌ ")+(msg[key]||"");fb.classList.add('show');
+  });
+});
+</script>
+</body>
+</html>

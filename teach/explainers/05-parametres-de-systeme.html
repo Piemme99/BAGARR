@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAGARR · Le vocabulaire des paramètres de système</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2a313c; --accent:#ff8f3f; --accent2:#5db1ff; --good:#3fb950; --bad:#f85149;
+    --purple:#c77dff; --code:#0b0e13; --shadow:0 10px 40px rgba(0,0,0,.4);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:light){
+    :root{--bg:#f6f7f9;--panel:#fff;--panel2:#f0f2f5;--ink:#1b2027;--muted:#5a6672;
+      --line:#e2e6ea;--shadow:0 10px 40px rgba(0,0,0,.08);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:17px}
+  .wrap{max-width:840px;margin:0 auto;padding:0 22px 120px}
+  header.hero{padding:64px 22px 40px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 0%,rgba(93,177,255,.15),transparent 60%);}
+  .hero .kicker{font-family:var(--mono);color:var(--accent2);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem}
+  .hero h1{font-size:2.3rem;margin:.3em 0 .2em;line-height:1.1;letter-spacing:-.02em}
+  .hero p{color:var(--muted);max-width:640px;margin:0 auto;font-size:1.05rem}
+  .prog{position:sticky;top:0;height:4px;background:transparent;z-index:20}
+  .prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  h2{font-size:1.5rem;margin:2.6em 0 .5em;letter-spacing:-.01em;scroll-margin-top:40px}
+  h2 .n{font-family:var(--mono);color:var(--accent2);font-size:1rem;margin-right:.5em}
+  h3{font-size:1.12rem;margin:1.6em 0 .4em}
+  p{margin:.7em 0}
+  a{color:var(--accent2);text-decoration:none;border-bottom:1px solid transparent}
+  a:hover{border-bottom-color:var(--accent2)}
+  code{font-family:var(--mono);background:var(--panel2);padding:.1em .4em;border-radius:5px;font-size:.85em}
+  pre{background:var(--code);color:#dbe3ea;border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.6}
+  pre .c{color:#6c7986}.kw{color:#ff8f3f}.ty{color:#5db1ff}.fn{color:#c77dff}
+  .lead{font-size:1.08rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+  .cite{font-size:.8rem;color:var(--muted);font-family:var(--mono)}.cite a{color:var(--muted)}
+  .try,.note{border-radius:14px;padding:16px 18px;margin:20px 0;border:1px solid var(--line)}
+  .note{background:rgba(93,177,255,.07);border-color:rgba(93,177,255,.35)}
+  .try{background:linear-gradient(180deg,rgba(63,185,80,.09),transparent);border-color:rgba(63,185,80,.4)}
+  .note .tag,.try .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;display:inline-block;margin-bottom:6px}
+  .note .tag{color:var(--accent2)}.try .tag{color:var(--good)}
+  /* decoder */
+  .dec{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin:20px 0}
+  .dec .sig{font-family:var(--mono);font-size:1.15rem;text-align:center;margin:6px 0 16px;line-height:2}
+  .tok{padding:2px 6px;border-radius:6px;cursor:pointer;border:1px solid transparent;transition:.12s}
+  .tok.acc{background:rgba(255,143,63,.16);color:var(--accent)}
+  .tok.kind{background:rgba(93,177,255,.16);color:var(--accent2)}
+  .tok.leaf{background:rgba(199,125,255,.16);color:var(--purple)}
+  .tok:hover{border-color:currentColor}
+  .exp{min-height:2.6em;text-align:center;color:var(--muted);font-size:.95rem;border-top:1px solid var(--line);padding-top:14px}
+  .exp b{color:var(--ink)}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.88rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);font-family:var(--mono);font-size:.76rem}
+  td .p{font-family:var(--mono);color:var(--accent2);font-size:.85rem}
+  .quiz{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent2);border-radius:12px;padding:18px 20px;margin:22px 0}
+  .quiz .q{font-weight:600;margin-bottom:12px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;padding:11px 14px;margin:7px 0;cursor:pointer;font-size:.95rem;transition:.12s;font-family:inherit}
+  .opt:hover{border-color:var(--accent2)}
+  .opt.correct{border-color:var(--good);background:rgba(63,185,80,.14)}
+  .opt.wrong{border-color:var(--bad);background:rgba(248,81,73,.12)}
+  .fb{margin-top:10px;font-size:.9rem;color:var(--muted);display:none}.fb.show{display:block}
+  footer{border-top:1px solid var(--line);margin-top:60px;padding-top:24px;color:var(--muted);font-size:.85rem}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:22px}
+  .toc a{font-family:var(--mono);font-size:.78rem;background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:20px;color:var(--muted)}
+  .toc a:hover{border-color:var(--accent2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="prog"><i id="pbar"></i></div>
+
+<header class="hero">
+  <div class="kicker">BAGARR · Fiche 05</div>
+  <h1>Le vocabulaire des paramètres de système</h1>
+  <p>Lire <code>ResMut&lt;Assets&lt;Mesh&gt;&gt;</code> d'un coup d'œil. Pourquoi Bevy est si verbeux
+     dans les signatures — et pourquoi c'est de l'info, pas du bruit.</p>
+  <div class="toc">
+    <a href="#idee">1 · Le bon de commande</a>
+    <a href="#lire">2 · Lire de dehors en dedans</a>
+    <a href="#vocab">3 · Le vocabulaire</a>
+    <a href="#pourquoi">4 · Pourquoi si verbeux</a>
+    <a href="#tes-sig">5 · Tes signatures</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+<p class="lead">En Bevy, la <b>signature</b> d'un système n'est pas de la décoration : c'est un
+<b>contrat</b> qui déclare exactement ce que le système touche. Une fois le vocabulaire acquis, tu lis
+n'importe quelle signature « d'un coup d'œil ». Ce sont toujours les <b>mêmes ~6 mots</b>.</p>
+
+<!-- 1 -->
+<h2 id="idee"><span class="n">01</span>Les paramètres = ton bon de commande</h2>
+<p>Un système est une fonction. Ses paramètres ne sont pas n'importe quels types : ce sont des
+<b>types spéciaux</b> (qui implémentent le trait <code>SystemParam</code>). Tu déclares ce dont tu as
+besoin, Bevy te le <b>fournit</b> (injection). Deux briques de vocabulaire orthogonales reviennent
+partout :</p>
+<div class="card" style="text-align:center">
+  <span class="tok acc">le wrapper d'accès</span> &nbsp;+&nbsp;
+  <span class="tok leaf">ce à quoi j'accède</span>
+  <p style="margin:.8em 0 0;color:var(--muted);font-size:.9rem">« quel <b>type</b> d'accès » enrobe
+  « quelle <b>donnée</b> ». C'est tout le motif.</p>
+</div>
+
+<!-- 2 -->
+<h2 id="lire"><span class="n">02</span>Se lit de l'extérieur vers l'intérieur</h2>
+<p>Clique chaque morceau pour le décoder :</p>
+
+<div class="dec">
+  <div class="sig">
+    <span class="tok acc" data-e="<b>ResMut&lt;…&gt;</b> : accès <b>mutable</b> (écriture) à une ressource. Son cousin Res&lt;…&gt; = lecture seule.">ResMut</span><span style="color:var(--muted)">&lt;</span><span class="tok kind" data-e="<b>Assets&lt;…&gt;</b> : une <b>banque d'assets</b> — le stockage central d'un type d'asset (ressource globale).">Assets</span><span style="color:var(--muted)">&lt;</span><span class="tok leaf" data-e="<b>Mesh</b> : le type de donnée stocké — ici une géométrie (des sommets/triangles).">Mesh</span><span style="color:var(--muted)">&gt;&gt;</span>
+  </div>
+  <div class="exp" id="exp1">👆 Clique un morceau. Lecture globale : « accès en écriture à la banque de tous les meshes ».</div>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--accent)"></i> accès (Res/ResMut/&amp;/&amp;mut)</span>
+    <span><i class="dot" style="background:var(--accent2)"></i> conteneur (Assets/Query…)</span>
+    <span><i class="dot" style="background:var(--purple)"></i> donnée (Mesh, Transform…)</span>
+  </div>
+</div>
+
+<div class="dec">
+  <div class="sig">
+    <span class="tok kind" data-e2="<b>Query&lt;D, F&gt;</b> : accéder aux composants des entités. 1re case = données, 2e = filtre.">Query</span><span style="color:var(--muted)">&lt;</span><span class="tok acc" data-e2="<b>&amp;mut Transform</b> : accès <b>mutable</b> au composant Transform (on veut le modifier). &amp;Transform = lecture seule.">&amp;mut Transform</span><span style="color:var(--muted)">, </span><span class="tok leaf" data-e2="<b>With&lt;Player&gt;</b> : un <b>filtre</b> — ne garder que les entités ayant aussi Player. Ne donne PAS accès à Player.">With&lt;Player&gt;</span><span style="color:var(--muted)">&gt;</span>
+  </div>
+  <div class="exp" id="exp2">👆 Même logique : « pour chaque entité qui a un Player, un accès mutable à son Transform ».</div>
+</div>
+
+<!-- 3 -->
+<h2 id="vocab"><span class="n">03</span>Le vocabulaire (les ~6 mots)</h2>
+<table>
+  <tr><th>Paramètre</th><th>Donne accès à…</th><th>Lecture / écriture</th></tr>
+  <tr><td class="p">Commands</td><td>créer / détruire des entités, ajouter/retirer des composants (différé)</td><td>écriture (différée)</td></tr>
+  <tr><td class="p">Query&lt;D, F&gt;</td><td>les composants des entités (D = données, F = filtre)</td><td><code>&amp;T</code> lecture · <code>&amp;mut T</code> écriture</td></tr>
+  <tr><td class="p">Res&lt;T&gt;</td><td>une ressource (donnée globale unique)</td><td>lecture seule</td></tr>
+  <tr><td class="p">ResMut&lt;T&gt;</td><td>une ressource</td><td>écriture</td></tr>
+  <tr><td class="p">Local&lt;T&gt;</td><td>une donnée <b>privée</b> à ce système (persistante entre frames)</td><td>écriture</td></tr>
+  <tr><td class="p">EventReader&lt;E&gt;<br>EventWriter&lt;E&gt;</td><td>lire / envoyer des événements de type E</td><td>lecture / écriture</td></tr>
+</table>
+<p><code>Assets&lt;T&gt;</code>, <code>Time</code>, <code>ButtonInput&lt;KeyCode&gt;</code>… ne sont pas
+des mots à part : ce sont juste des <b>ressources</b>, donc on y accède via <code>Res&lt;…&gt;</code> /
+<code>ResMut&lt;…&gt;</code>. On peut aussi <b>grouper</b> les paramètres en tuples (max 16 params).</p>
+<p class="cite">Sources : <a href="https://bevy-cheatbook.github.io/programming/systems.html">Cheat Book — Systems</a> · <a href="https://bevy-cheatbook.github.io/programming/res.html">Resources</a> · <a href="https://bevy-cheatbook.github.io/programming/local.html">Local</a></p>
+
+<!-- 4 -->
+<h2 id="pourquoi"><span class="n">04</span>Pourquoi si verbeux ? (spoiler : ce n'est pas du bruit)</h2>
+<p>Trois raisons rendent cette verbosité <em>utile</em> :</p>
+<ul>
+  <li><b>C'est de l'info compressée.</b> <code>ResMut&lt;Assets&lt;Mesh&gt;&gt;</code> te dit 3 choses :
+    <em>accès mutable</em> + <em>banque d'assets</em> + <em>de meshes</em>. Rien de caché.</li>
+  <li><b>C'est uniforme.</b> <code>Res&lt;T&gt;</code>/<code>ResMut&lt;T&gt;</code> se lit pareil pour
+    <em>toute</em> ressource : <code>Time</code>, <code>Assets&lt;Mesh&gt;</code>, les tiennes… Un
+    seul motif à apprendre.</li>
+  <li><b>Ça a une fonction technique.</b> Bevy <b>lit ta signature</b> pour savoir qui lit et qui
+    écrit quoi, et en déduit quels systèmes peuvent tourner <b>en parallèle</b> sans conflit.
+    <code>Res</code> vs <code>ResMut</code>, <code>&amp;</code> vs <code>&amp;mut</code> : c'est
+    <em>cette</em> information.</li>
+</ul>
+<div class="note"><span class="tag">Tu veux moins verbeux ?</span> Rust permet un <b>alias de type</b> :
+<pre><span class="kw">type</span> <span class="ty">Meshes</span>&lt;<span class="ty">'w</span>&gt; = <span class="ty">ResMut</span>&lt;<span class="ty">'w</span>, <span class="ty">Assets</span>&lt;<span class="ty">Mesh</span>&gt;&gt;;
+<span class="kw">fn</span> <span class="fn">spawn_enemy</span>(<span class="kw">mut</span> meshes: <span class="ty">Meshes</span>, ...) { ... }</pre>
+Libre à toi — mais tu masques alors « c'est une ressource, en écriture » au lecteur (pas au
+compilateur). À doser.</div>
+
+<div class="quiz" data-key="no">
+  <div class="q">Système A prend <code>ResMut&lt;Score&gt;</code>, système B prend aussi
+    <code>ResMut&lt;Score&gt;</code>. Bevy peut-il les faire tourner <b>en parallèle</b> ?</div>
+  <button class="opt" data-k="yes">Oui, toujours</button>
+  <button class="opt" data-k="no">Non : deux accès en écriture à la même ressource → conflit, exécution sérialisée</button>
+  <button class="opt" data-k="dunno">Ça dépend du framerate</button>
+  <div class="fb"></div>
+</div>
+<div class="quiz" data-key="read">
+  <div class="q">Et si A prend <code>Res&lt;Score&gt;</code> et B prend <code>Res&lt;Score&gt;</code>
+    (les deux en lecture) ?</div>
+  <button class="opt" data-k="read">Oui : deux lectures ne se gênent pas → parallèle possible</button>
+  <button class="opt" data-k="nope">Non, lire est aussi un conflit</button>
+  <div class="fb"></div>
+</div>
+
+<!-- 5 -->
+<h2 id="tes-sig"><span class="n">05</span>Tes propres signatures, décodées</h2>
+<p><b><code>move_player</code></b> :</p>
+<pre>keyboard: <span class="ty">Res</span>&lt;<span class="ty">ButtonInput</span>&lt;<span class="ty">KeyCode</span>&gt;&gt;   <span class="c">// lecture : l'état du clavier</span>
+time: <span class="ty">Res</span>&lt;<span class="ty">Time</span>&gt;                          <span class="c">// lecture : le temps (delta)</span>
+mut transform_query: <span class="ty">Query</span>&lt;&amp;<span class="kw">mut</span> <span class="ty">Transform</span>, <span class="ty">With</span>&lt;<span class="ty">Player</span>&gt;&gt;  <span class="c">// écriture : la position du joueur</span>
+window_query: <span class="ty">Query</span>&lt;&amp;<span class="ty">Window</span>, <span class="ty">With</span>&lt;<span class="ty">PrimaryWindow</span>&gt;&gt;      <span class="c">// lecture : la fenêtre</span></pre>
+<p>Lu d'un coup : « je lis clavier + temps + fenêtre, et j'écris la position du joueur ». <b>Tu sais
+exactement ce que ce système touche, sans lire son corps.</b></p>
+<p><b><code>spawn_enemy</code></b> :</p>
+<pre>mut commands: <span class="ty">Commands</span>                       <span class="c">// je vais créer une entité</span>
+mut meshes: <span class="ty">ResMut</span>&lt;<span class="ty">Assets</span>&lt;<span class="ty">Mesh</span>&gt;&gt;         <span class="c">// écriture : j'ajoute un mesh</span>
+mut materials: <span class="ty">ResMut</span>&lt;<span class="ty">Assets</span>&lt;<span class="ty">ColorMaterial</span>&gt;&gt; <span class="c">// écriture : j'ajoute un matériau</span></pre>
+
+<h2 id="recap"><span class="n">✦</span>Récap</h2>
+<div class="card"><p style="margin:0">Une signature de système se lit <b>de l'extérieur vers l'intérieur</b> :
+un <b>wrapper d'accès</b> (<code>Res</code>/<code>ResMut</code>/<code>&amp;</code>/<code>&amp;mut</code>/
+<code>Commands</code>/<code>Query</code>) enrobe une <b>donnée</b>. C'est verbeux parce que c'est de
+l'<b>info compressée</b> (accès + conteneur + contenu) et <b>uniforme</b> partout — et Bevy s'en sert
+pour paralléliser tes systèmes. Toujours les mêmes ~6 mots.</p></div>
+
+<footer>
+  <p><b>Sources</b> (dans <code>teach/RESOURCES.md</code>) :
+  <a href="https://bevy-cheatbook.github.io/programming/systems.html">Cheat Book — Systems</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/res.html">Resources</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/local.html">Local</a> ·
+  <a href="https://docs.rs/bevy/latest/bevy/ecs/system/struct.ResMut.html">docs.rs — ResMut</a></p>
+  <p>BAGARR · carnet <code>teach/</code> · fiche 05</p>
+</footer>
+</div>
+
+<script>
+const pbar=document.getElementById('pbar');
+addEventListener('scroll',()=>{const h=document.documentElement;pbar.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+
+document.querySelectorAll('.dec .tok[data-e]').forEach(t=>t.onclick=()=>{
+  document.getElementById('exp1').innerHTML=t.dataset.e;});
+document.querySelectorAll('.dec .tok[data-e2]').forEach(t=>t.onclick=()=>{
+  document.getElementById('exp2').innerHTML=t.dataset.e2;});
+
+document.querySelectorAll('.quiz').forEach(q=>{
+  const key=q.dataset.key,fb=q.querySelector('.fb');
+  const msg={
+    no:"Deux écritures (ResMut) sur la même ressource ne peuvent pas être simultanées : Bevy les sérialise pour éviter la course de données.",
+    read:"Plusieurs lectures (Res) de la même ressource sont sûres → Bevy peut les paralléliser. C'est la règle emprunt de Rust : N lecteurs OU 1 écrivain.",
+  };
+  q.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{
+    q.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.k===key)x.classList.add('correct');});
+    const ok=o.dataset.k===key;if(!ok)o.classList.add('wrong');
+    fb.textContent=(ok?"✅ ":"❌ ")+(msg[key]||"");fb.classList.add('show');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAGARR · Communication &amp; découplage entre systèmes</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2a313c; --accent:#ff8f3f; --accent2:#5db1ff; --good:#3fb950; --bad:#f85149;
+    --purple:#c77dff; --code:#0b0e13; --shadow:0 10px 40px rgba(0,0,0,.4);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:light){
+    :root{--bg:#f6f7f9;--panel:#fff;--panel2:#f0f2f5;--ink:#1b2027;--muted:#5a6672;
+      --line:#e2e6ea;--shadow:0 10px 40px rgba(0,0,0,.08);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:17px}
+  .wrap{max-width:840px;margin:0 auto;padding:0 22px 120px}
+  header.hero{padding:60px 22px 36px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 0%,rgba(63,185,80,.15),transparent 60%);}
+  .hero .kicker{font-family:var(--mono);color:var(--good);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem}
+  .hero h1{font-size:2.2rem;margin:.3em 0 .2em;line-height:1.1}
+  .hero p{color:var(--muted);max-width:620px;margin:0 auto}
+  .prog{position:sticky;top:0;height:4px;background:transparent;z-index:20}
+  .prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--good),var(--accent2))}
+  h2{font-size:1.45rem;margin:2.4em 0 .5em;scroll-margin-top:20px}
+  h2 .n{font-family:var(--mono);color:var(--good);font-size:1rem;margin-right:.5em}
+  h3{font-size:1.12rem;margin:1.5em 0 .4em}
+  p{margin:.7em 0}
+  code{font-family:var(--mono);background:var(--panel2);padding:.1em .4em;border-radius:5px;font-size:.85em}
+  pre{background:var(--code);color:#dbe3ea;border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.6}
+  pre .c{color:#6c7986}.kw{color:#ff8f3f}.ty{color:#5db1ff}.fn{color:#c77dff}
+  a{color:var(--accent2);text-decoration:none}a:hover{text-decoration:underline}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+  .cite{font-size:.8rem;color:var(--muted);font-family:var(--mono)}.cite a{color:var(--muted)}
+  .try,.note,.warn{border-radius:14px;padding:16px 18px;margin:20px 0;border:1px solid var(--line)}
+  .note{background:rgba(93,177,255,.07);border-color:rgba(93,177,255,.35)}
+  .warn{background:rgba(255,143,63,.09);border-color:rgba(255,143,63,.4)}
+  .note .tag,.warn .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:6px}
+  .note .tag{color:var(--accent2)}.warn .tag{color:var(--accent)}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:22px}
+  .toc a{font-family:var(--mono);font-size:.78rem;background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:20px;color:var(--muted)}
+  .toc a:hover{border-color:var(--good);color:var(--ink)}
+  /* coupled/decoupled toggle */
+  .demo{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin:20px 0}
+  .demo .toggle{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .demo .toggle button{font-family:var(--mono);font-size:.82rem;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}
+  .demo .toggle button.on{border-color:var(--good);color:var(--good);background:rgba(63,185,80,.12)}
+  .diagram{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;min-height:120px}
+  .box{font-family:var(--mono);font-size:.8rem;padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);text-align:center}
+  .box.src{border-color:var(--accent);color:var(--accent)}
+  .box.msg{border-color:var(--good);color:var(--good);background:rgba(63,185,80,.1)}
+  .box.dst{border-color:var(--accent2);color:var(--accent2)}
+  .arrow{color:var(--muted);font-size:1.2rem}
+  .col{display:flex;flex-direction:column;gap:6px}
+  .demo .verdict{margin-top:14px;color:var(--muted);font-size:.9rem;text-align:center}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.86rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);font-family:var(--mono);font-size:.75rem}
+  td .k{font-family:var(--mono);color:var(--accent2);font-size:.85rem}
+  .quiz{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--good);border-radius:12px;padding:18px 20px;margin:22px 0}
+  .quiz .q{font-weight:600;margin-bottom:12px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:11px 14px;margin:7px 0;cursor:pointer;font-size:.95rem;transition:.12s;font-family:inherit}
+  .opt:hover{border-color:var(--good)}
+  .opt.correct{border-color:var(--good);background:rgba(63,185,80,.14)}
+  .opt.wrong{border-color:var(--bad);background:rgba(248,81,73,.12)}
+  .fb{margin-top:10px;font-size:.9rem;color:var(--muted);display:none}.fb.show{display:block}
+  footer{border-top:1px solid var(--line);margin-top:50px;padding-top:22px;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="prog"><i id="pbar"></i></div>
+
+<header class="hero">
+  <div class="kicker">BAGARR · Fiche 08</div>
+  <h1>Communication &amp; découplage entre systèmes</h1>
+  <p>Les systèmes ne s'appellent pas entre eux — ils parlent à travers le World. Comment coordonner
+     à l'échelle sans emmêler ton code.</p>
+  <div class="toc">
+    <a href="#reframe">1 · Ils ne s'appellent pas</a>
+    <a href="#canaux">2 · Les 3 canaux</a>
+    <a href="#messages">3 · Messages</a>
+    <a href="#ordre">4 · L'ordre</a>
+    <a href="#observers">5 · Observers</a>
+    <a href="#guide">6 · Quoi utiliser</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- 1 -->
+<h2 id="reframe"><span class="n">01</span>Le recadrage : les systèmes ne s'appellent pas</h2>
+<p>En Bevy, tu n'as <b>pas</b> de graphe « le système A appelle B appelle C ». Les systèmes sont
+<b>indépendants</b> : Bevy les ordonnance, ils ne se référencent jamais. Ils <b>communiquent par le
+World</b>.</p>
+<div class="note"><span class="tag">Nuance importante</span> Ton <code>attack</code> qui appelle
+<code>kill_enemies_in_circle</code>, ce n'est <b>pas</b> du couplage entre systèmes :
+<code>kill_enemies_in_circle</code> est une <b>fonction helper</b> (pas un système), appelée <em>dans</em>
+un système. Décomposer un système en fonctions pures = sain. Le « web de systèmes qui s'appellent »
+que tu crains <b>n'existe pas par construction</b>.</div>
+
+<!-- 2 -->
+<h2 id="canaux"><span class="n">02</span>Les canaux de communication</h2>
+<p>Un système <b>produit</b> de la donnée, un autre la <b>consomme</b>, sans se connaître :</p>
+<table>
+  <tr><th>Canal</th><th>Pour quoi</th><th>Couplage</th></tr>
+  <tr><td class="k">Component</td><td>état attaché à une entité (« qui a quoi »)</td><td>très faible — on agit sur « toute entité avec X »</td></tr>
+  <tr><td class="k">Resource</td><td>état global partagé (score, config, timers)</td><td>faible</td></tr>
+  <tr><td class="k">Message</td><td>« un événement est arrivé » → 0..N réactions (bufferisé)</td><td>le plus faible — producteur ↔ consommateurs anonymes</td></tr>
+  <tr><td class="k">Observer (Event)</td><td>réaction <b>immédiate</b> &amp; ciblée à un événement</td><td>faible, réactif</td></tr>
+</table>
+
+<!-- 3 -->
+<h2 id="messages"><span class="n">03</span>Messages : « X est arrivé → plusieurs réactions »</h2>
+<p>Le levier anti-couplage central. Bascule la démo :</p>
+<div class="demo">
+  <div class="toggle">
+    <button class="on" data-m="coupled">❌ Couplé (attack fait tout)</button>
+    <button data-m="decoupled">✅ Découplé (message)</button>
+  </div>
+  <div class="diagram" id="diagram"></div>
+  <div class="verdict" id="verdict"></div>
+</div>
+<p>API Bevy 0.19 (vérifiée dans le source) — un producteur écrit, des consommateurs indépendants lisent :</p>
+<pre><span class="kw">#[derive(Message)]</span>                       <span class="c">// ⚠️ Message, PAS Event (renommé en 0.19)</span>
+<span class="kw">struct</span> <span class="ty">EnemyKilled</span> { position: <span class="ty">Vec2</span> }
+
+<span class="c">// enregistrement : app.add_message::&lt;EnemyKilled&gt;();</span>
+
+<span class="c">// PRODUCTEUR — annonce, sans rien savoir des réactions :</span>
+<span class="kw">fn</span> <span class="fn">attack</span>(<span class="kw">mut</span> killed: <span class="ty">MessageWriter</span>&lt;<span class="ty">EnemyKilled</span>&gt;, ...) {
+    killed.<span class="fn">write</span>(<span class="ty">EnemyKilled</span> { position });
+}
+
+<span class="c">// CONSOMMATEURS — chacun réagit, aucun ne connaît les autres :</span>
+<span class="kw">fn</span> <span class="fn">update_score</span>(<span class="kw">mut</span> r: <span class="ty">MessageReader</span>&lt;<span class="ty">EnemyKilled</span>&gt;, <span class="kw">mut</span> kills: <span class="ty">ResMut</span>&lt;<span class="ty">Kills</span>&gt;) {
+    <span class="kw">for</span> _ <span class="kw">in</span> r.<span class="fn">read</span>() { kills.0 += 1; }
+}
+<span class="c">// fn play_death_sound(...)   fn spawn_particles(...)  ← ajout = nouveau système, rien à toucher ailleurs</span></pre>
+<div class="warn"><span class="tag">Vocabulaire 0.19</span> C'est <code>Message</code> /
+<code>MessageWriter</code> / <code>MessageReader</code> / <code>.write()</code> / <code>.read()</code> /
+<code>add_message</code>. Les tutos (et le Cheat Book) disent encore <code>Event</code> /
+<code>EventWriter</code> / <code>send</code> → <b>périmé</b>, même concept, autres noms.</div>
+<div class="warn"><span class="tag">Piège du décalage d'1 frame</span> Un message écrit est lu au
+<b>prochain passage</b> du lecteur. Si le lecteur tourne <em>avant</em> l'écrivain dans la frame, il
+lira le message la frame <b>suivante</b> (1 frame de retard). Si tu as besoin du même-frame, force
+l'<b>ordre</b> (§4).</div>
+<p class="cite">Source : <a href="https://bevy-cheatbook.github.io/programming/events.html">Cheat Book — Events</a> (concept ; noms à traduire) · source vérifiée <code>bevy_ecs/src/message/*</code></p>
+
+<!-- 4 -->
+<h2 id="ordre"><span class="n">04</span>L'ordre : dépendance déclarative, pas un appel</h2>
+<p>Si B a besoin de ce que A produit <em>dans la même frame</em>, tu ne fais pas « B appelle A » : tu
+<b>déclares l'ordre</b>.</p>
+<pre>.add_systems(<span class="ty">Update</span>, (a, b).<span class="fn">chain</span>())        <span class="c">// a, puis b</span>
+.add_systems(<span class="ty">Update</span>, b.<span class="fn">after</span>(a))          <span class="c">// b après a</span>
+.add_systems(<span class="ty">Update</span>, a.<span class="fn">before</span>(b))         <span class="c">// équivalent</span></pre>
+<p>+ les <code>SystemSet</code> pour grouper et ordonner à plus grande échelle. Bevy fait tourner en
+<b>parallèle</b> tout ce qui n'a pas de conflit d'accès (fiche 05) ; l'ordre n'est imposé que là où
+tu le demandes.</p>
+<p class="cite">Source : <a href="https://bevy-cheatbook.github.io/programming/system-order.html">Cheat Book — System Order</a></p>
+
+<!-- 5 -->
+<h2 id="observers"><span class="n">05</span>Observers : la réaction immédiate (le nouveau sens d'<code>Event</code>)</h2>
+<p>Là où un <b>Message</b> est <em>bufferisé</em> (lu à la prochaine exécution du lecteur), un
+<b>observer</b> réagit <b>immédiatement</b> quand un <code>Event</code> est déclenché, souvent
+<b>ciblé sur une entité</b>. API 0.19 (vérifiée) :</p>
+<pre><span class="kw">#[derive(Event)]</span>
+<span class="kw">struct</span> <span class="ty">Damage</span>(<span class="ty">u32</span>);
+
+<span class="c">// un observer = une fonction qui prend On&lt;E&gt; ; on l'attache avec app.add_observer(...)</span>
+<span class="kw">fn</span> <span class="fn">on_damage</span>(trigger: <span class="ty">On</span>&lt;<span class="ty">Damage</span>&gt;, ...) { <span class="c">/* réagit tout de suite */</span> }</pre>
+<p>Résumé : <b>Message</b> = « diffuse à qui veut, traité au prochain tour » (score, sons, stats…) ;
+<b>Observer/Event</b> = « réagis maintenant, précisément » (ex. appliquer des dégâts à <em>cette</em>
+entité). On approfondira l'API si on s'en sert.</p>
+<p class="cite">Source vérifiée : <code>bevy_ecs/src/observer/*</code> (<code>On&lt;E&gt;</code>, <code>add_observer</code>)</p>
+
+<!-- 6 -->
+<h2 id="guide"><span class="n">06</span>Quoi utiliser, quand</h2>
+<table>
+  <tr><th>Besoin</th><th>Outil</th></tr>
+  <tr><td>Un état durable attaché à des entités</td><td>un <b>Component</b> (+ un système qui le lit)</td></tr>
+  <tr><td>Un état global (score, réglages)</td><td>une <b>Resource</b></td></tr>
+  <tr><td>« Un truc est arrivé », plusieurs réactions possibles</td><td>un <b>Message</b> (le cas « mort → score + son + particules »)</td></tr>
+  <tr><td>Réagir tout de suite, sur une entité précise</td><td>un <b>Observer</b> (<code>Event</code> + <code>add_observer</code>)</td></tr>
+  <tr><td>« B doit voir ce que A a fait cette frame »</td><td><b>ordre</b> : <code>.after</code>/<code>.chain</code></td></tr>
+  <tr><td>Découper des logiques d'une même famille</td><td>fonctions helpers <em>dans</em> un système (données pures)</td></tr>
+</table>
+
+<div class="quiz" data-key="msg">
+  <div class="q">À la mort d'un ennemi tu veux : +1 au score, un son, des particules, et plus tard un
+    drop d'XP. Comment garder ça découplé ?</div>
+  <button class="opt" data-k="all">Tout faire dans le système d'attaque</button>
+  <button class="opt" data-k="msg">Émettre un Message `EnemyKilled` ; un système par réaction, qui le lit</button>
+  <button class="opt" data-k="call">Faire appeler par attack les fonctions son/particules/score</button>
+  <div class="fb"></div>
+</div>
+
+<h2 id="recap"><span class="n">✦</span>Récap</h2>
+<div class="card"><p style="margin:0">Les systèmes ne s'appellent pas : ils <b>produisent/consomment</b>
+de la donnée via <b>Components</b>, <b>Resources</b>, <b>Messages</b> (bufferisés, 0..N lecteurs) et
+<b>Observers</b> (réaction immédiate). Pour « un événement → plusieurs réactions » → un
+<b>Message</b> (ajouter une réaction = ajouter un système, sans toucher au producteur). Pour « B après
+A » → l'<b>ordre</b> déclaratif (<code>.after</code>/<code>.chain</code>). Pas de graphe d'appels à
+suivre : c'est ce qui fait que l'ECS <b>scale</b>. Pense « flux de données », pas « appel ».</p></div>
+
+<footer>
+  <p><b>Sources</b> (dans <code>teach/RESOURCES.md</code>) :
+  <a href="https://bevy-cheatbook.github.io/programming/events.html">Cheat Book — Events</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/system-order.html">System Order</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/schedules.html">Schedules</a> ·
+  source vérifiée <code>bevy_ecs/src/{message,observer}/*</code></p>
+  <p>BAGARR · carnet <code>teach/</code> · fiche 08</p>
+</footer>
+</div>
+
+<script>
+const pbar=document.getElementById('pbar');
+addEventListener('scroll',()=>{const h=document.documentElement;pbar.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+
+const diagram=document.getElementById('diagram'), verdict=document.getElementById('verdict');
+function setMode(m){
+  document.querySelectorAll('.demo .toggle button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  if(m==='coupled'){
+    diagram.innerHTML=`
+      <div class="box src">attack</div>
+      <span class="arrow">→</span>
+      <div class="col">
+        <div class="box dst">despawn</div>
+        <div class="box dst">score++</div>
+        <div class="box dst">son</div>
+        <div class="box dst">particules</div>
+      </div>`;
+    verdict.innerHTML="<b>attack</b> connaît et appelle TOUT. Ajouter une réaction = modifier attack. Ça enfle et s'emmêle.";
+  } else {
+    diagram.innerHTML=`
+      <div class="box src">attack</div>
+      <span class="arrow">→</span>
+      <div class="box msg">Message<br>EnemyKilled</div>
+      <span class="arrow">→</span>
+      <div class="col">
+        <div class="box dst">score</div>
+        <div class="box dst">son</div>
+        <div class="box dst">particules</div>
+        <div class="box dst" style="opacity:.6">+ XP (plus tard)</div>
+      </div>`;
+    verdict.innerHTML="<b>attack</b> annonce juste « un ennemi est mort ». Chaque réaction est un système indépendant qui lit le message. Ajouter = nouveau système, rien à toucher ailleurs.";
+  }
+}
+document.querySelectorAll('.demo .toggle button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+setMode('coupled');
+
+document.querySelectorAll('.quiz').forEach(q=>{
+  const key=q.dataset.key,fb=q.querySelector('.fb');
+  const msg={msg:"Oui : un Message EnemyKilled découple le producteur (attack) des réactions. Chaque effet est un système qui lit le message → tu en ajoutes/retires sans toucher au reste."};
+  q.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{
+    q.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.k===key)x.classList.add('correct');});
+    const ok=o.dataset.k===key;if(!ok)o.classList.add('wrong');
+    fb.textContent=(ok?"✅ ":"❌ ")+(msg[key]||"");fb.classList.add('show');
+  });
+});
+</script>
+</body>
+</html>
