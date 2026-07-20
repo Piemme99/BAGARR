@@ -83,6 +83,22 @@
 - [docs.rs — ResMut](https://docs.rs/bevy/latest/bevy/ecs/system/struct.ResMut.html)
   Le type exact et sa durée de vie. Use for: comprendre le wrapper.
 
+### World & niveaux d'accès (vues, Commands, &mut World, FromWorld)
+- [Bevy Cheat Book — Intro: Your Data](https://bevy-cheatbook.github.io/programming/intro-data.html)
+  Le World comme conteneur de tout l'état (entités/composants/resources). Use for: le modèle mental
+  « base de données ».
+- [Bevy Cheat Book — Direct World Access](https://bevy-cheatbook.github.io/programming/world.html)
+  Accéder au World en direct via `&mut World`. Use for: ce qu'on gagne/perd avec l'accès exclusif.
+- [Bevy Cheat Book — Exclusive Systems](https://bevy-cheatbook.github.io/programming/exclusive.html)
+  Systèmes `&mut World` : quand et pourquoi (rarement). Use for: les cas d'usage légitimes.
+- [docs.rs — World](https://docs.rs/bevy/latest/bevy/ecs/world/struct.World.html)
+  L'API exacte (`resource_mut`, `spawn`, …). Use for: signatures précises en 0.19.
+- [docs.rs — FromWorld](https://docs.rs/bevy/latest/bevy/ecs/world/trait.FromWorld.html)
+  Le trait derrière `init_resource` ; blanket impl pour tout `T: Default`. Use for: resources qui ne
+  se construisent pas à partir de rien (ex. handles d'assets).
+- Source vérifiée 0.19 : `bevy_ecs-0.19.0/src/world/mod.rs:3995` (trait `FromWorld` + blanket impl
+  Default), `bevy_asset-0.19.0/src/handle.rs:134` (`Handle::Strong(Arc<StrongHandle>)`).
+
 ### Timer & temps
 - [Bevy Cheat Book — Time and Timers](https://bevy-cheatbook.github.io/fundamentals/time.html)
   `Timer`, `tick`, `finished`/`just_finished`, `TimerMode`. Use for: chronos périodiques.

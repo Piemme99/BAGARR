@@ -1,15 +1,24 @@
 use bevy::{input::common_conditions::input_just_pressed, prelude::*, window::PrimaryWindow};
 
-use crate::{enemy::Enemy, hud::Kills, player::Player};
+use crate::{enemy::Enemy, player::Player};
 
 const ATTACK_RADIUS: f32 = 40.0;
 const ATTACK_REACH: f32 = 70.0;
 
 pub struct CombatPlugin;
 
+#[derive(Resource, Default)]
+pub struct Kills(pub u32);
+
+#[derive(Message)]
+pub struct EnemyKilled;
+
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
+        app.add_message::<EnemyKilled>();
+        app.init_resource::<Kills>();
         app.add_systems(Update, attack.run_if(input_just_pressed(MouseButton::Left)));
+        app.add_systems(Update, increment_kills);
     }
 }
 
@@ -19,12 +28,12 @@ fn attack(
     player_query: Query<&Transform, With<Player>>,
     enemy_query: Query<(Entity, &Transform), (With<Enemy>, Without<Player>)>,
     commands: Commands,
-    kills: ResMut<Kills>,
+    enemy_writer: MessageWriter<EnemyKilled>,
 ) {
     let Some(hit_center) = attack_hit_center(&window_query, &camera_query, &player_query) else {
         return;
     };
-    kill_enemies_in_circle(hit_center, enemy_query, commands, kills);
+    kill_enemies_in_circle(hit_center, enemy_query, commands, enemy_writer);
 }
 
 fn attack_hit_center(
@@ -42,15 +51,20 @@ fn kill_enemies_in_circle(
     hit_center: Vec2,
     enemy_query: Query<(Entity, &Transform), (With<Enemy>, Without<Player>)>,
     mut commands: Commands,
-    mut kills: ResMut<Kills>,
+    mut enemy_writer: MessageWriter<EnemyKilled>,
 ) {
     for (enemy_entity, enemy_transform) in enemy_query.iter() {
         let enemy_pos = enemy_transform.translation.truncate();
         if enemy_pos.distance_squared(hit_center) <= ATTACK_RADIUS * ATTACK_RADIUS {
             commands.entity(enemy_entity).despawn();
-            kills.0 += 1;
-            info!("kills = {}", kills.0);
+            enemy_writer.write(EnemyKilled);
         }
+    }
+}
+
+fn increment_kills(mut enemy_reader: MessageReader<EnemyKilled>, mut kills: ResMut<Kills>) {
+    for _ in enemy_reader.read() {
+        kills.0 += 1;
     }
 }
 

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAGARR · Le World — la base de données de ton jeu</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2a313c; --accent:#ff8f3f; --accent2:#5db1ff; --good:#3fb950; --bad:#f85149;
+    --purple:#c77dff; --code:#0b0e13; --shadow:0 10px 40px rgba(0,0,0,.4);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:light){
+    :root{--bg:#f6f7f9;--panel:#fff;--panel2:#f0f2f5;--ink:#1b2027;--muted:#5a6672;
+      --line:#e2e6ea;--shadow:0 10px 40px rgba(0,0,0,.08);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:17px}
+  .wrap{max-width:840px;margin:0 auto;padding:0 22px 120px}
+  header.hero{padding:64px 22px 40px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 0%,rgba(199,125,255,.14),transparent 60%);}
+  .hero .kicker{font-family:var(--mono);color:var(--purple);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem}
+  .hero h1{font-size:2.3rem;margin:.3em 0 .2em;line-height:1.1;letter-spacing:-.02em}
+  .hero p{color:var(--muted);max-width:640px;margin:0 auto;font-size:1.05rem}
+  .prog{position:sticky;top:0;height:4px;background:transparent;z-index:20}
+  .prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--purple),var(--accent))}
+  h2{font-size:1.5rem;margin:2.6em 0 .5em;letter-spacing:-.01em;scroll-margin-top:40px}
+  h2 .n{font-family:var(--mono);color:var(--purple);font-size:1rem;margin-right:.5em}
+  h3{font-size:1.12rem;margin:1.6em 0 .4em}
+  p{margin:.7em 0}
+  a{color:var(--accent2);text-decoration:none;border-bottom:1px solid transparent}
+  a:hover{border-bottom-color:var(--accent2)}
+  code{font-family:var(--mono);background:var(--panel2);padding:.1em .4em;border-radius:5px;font-size:.85em}
+  pre{background:var(--code);color:#dbe3ea;border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.6}
+  pre .c{color:#6c7986}.kw{color:#ff8f3f}.ty{color:#5db1ff}.fn{color:#c77dff}
+  .lead{font-size:1.08rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+  .cite{font-size:.8rem;color:var(--muted);font-family:var(--mono)}.cite a{color:var(--muted)}
+  .try,.note{border-radius:14px;padding:16px 18px;margin:20px 0;border:1px solid var(--line)}
+  .note{background:rgba(93,177,255,.07);border-color:rgba(93,177,255,.35)}
+  .try{background:linear-gradient(180deg,rgba(63,185,80,.09),transparent);border-color:rgba(63,185,80,.4)}
+  .note .tag,.try .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;display:inline-block;margin-bottom:6px}
+  .note .tag{color:var(--accent2)}.try .tag{color:var(--good)}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.88rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);font-family:var(--mono);font-size:.76rem}
+  td .p{font-family:var(--mono);color:var(--accent2);font-size:.85rem}
+  .quiz{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:12px;padding:18px 20px;margin:22px 0}
+  .quiz .q{font-weight:600;margin-bottom:12px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;padding:11px 14px;margin:7px 0;cursor:pointer;font-size:.95rem;transition:.12s;font-family:inherit}
+  .opt:hover{border-color:var(--purple)}
+  .opt.correct{border-color:var(--good);background:rgba(63,185,80,.14)}
+  .opt.wrong{border-color:var(--bad);background:rgba(248,81,73,.12)}
+  .fb{margin-top:10px;font-size:.9rem;color:var(--muted);display:none}.fb.show{display:block}
+  footer{border-top:1px solid var(--line);margin-top:60px;padding-top:24px;color:var(--muted);font-size:.85rem}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:22px}
+  .toc a{font-family:var(--mono);font-size:.78rem;background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:20px;color:var(--muted)}
+  .toc a:hover{border-color:var(--purple);color:var(--ink)}
+  /* schéma des 3 niveaux */
+  .levels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:20px 0}
+  @media(max-width:640px){.levels{grid-template-columns:1fr}}
+  .lvl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .lvl h4{margin:0 0 6px;font-family:var(--mono);font-size:.9rem}
+  .lvl p{font-size:.85rem;color:var(--muted);margin:.3em 0}
+  .lvl.l1 h4{color:var(--accent2)}.lvl.l2 h4{color:var(--accent)}.lvl.l3 h4{color:var(--purple)}
+</style>
+</head>
+<body>
+<div class="prog"><i id="pbar"></i></div>
+
+<header class="hero">
+  <div class="kicker">BAGARR · Fiche 09</div>
+  <h1>Le <code style="background:none;padding:0">World</code> — la base de données de ton jeu</h1>
+  <p>Tout l'état du jeu vit dans un seul conteneur que tu n'as jamais vu. Comprendre le World,
+     c'est comprendre d'un coup les signatures de systèmes, <code>Commands</code>,
+     le parallélisme… et <code>FromWorld</code>.</p>
+  <div class="toc">
+    <a href="#db">1 · La base de données</a>
+    <a href="#vues">2 · Les vues prêtées</a>
+    <a href="#commands">3 · Commands, la file</a>
+    <a href="#cle">4 · La clé maîtresse</a>
+    <a href="#niveaux">5 · Les 3 niveaux</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+<p class="lead">Depuis le début tu écris des systèmes qui « reçoivent » des <code>Query</code>, des
+<code>Res</code>, des <code>Commands</code>… mais reçoivent <em>depuis où</em> ? La réponse est
+toujours la même : depuis <b>le <code>World</code></b>, le conteneur unique qui possède tout l'état
+de BAGARR. Cette fiche le rend visible.</p>
+
+<!-- 1 -->
+<h2 id="db"><span class="n">01</span>Le World est une base de données en mémoire</h2>
+<p>Le <a href="https://docs.rs/bevy/latest/bevy/ecs/world/struct.World.html"><code>World</code></a>
+possède <b>tout</b> :</p>
+<ul>
+  <li>toutes les <b>entités</b> — ton joueur, chaque ennemi, le texte du HUD, la caméra ;</li>
+  <li>tous les <b>composants</b> attachés à ces entités — <code>Transform</code>, <code>Sprite</code>,
+      <code>Enemy</code>… ;</li>
+  <li>toutes les <b>resources</b> — les singletons globaux : <code>Kills</code>, <code>Time</code>,
+      <code>Assets&lt;Mesh&gt;</code>, ton futur <code>EnemyAssets</code>.</li>
+</ul>
+<div class="card">
+  <p style="margin:0"><b>L'analogie qui tient la route</b> : une base de données relationnelle en
+  mémoire. Les <b>entités</b> sont des lignes (juste un identifiant), les <b>composants</b> des
+  colonnes, les <b>resources</b> des tables à une seule ligne. Et les <b>systèmes</b> ? Des requêtes
+  qui déclarent à l'avance ce qu'elles lisent et ce qu'elles écrivent.</p>
+</div>
+<p>Quand tu écris <code>App::new()</code>, Bevy crée un <code>World</code> à l'intérieur de
+l'<code>App</code>. Il existe depuis la première ligne de ton <code>main.rs</code> — tu ne l'as
+jamais vu parce que tu n'y accèdes qu'<em>indirectement</em>. Toute la suite de la fiche décrit les
+trois façons d'y accéder.</p>
+<p class="cite">Sources : <a href="https://bevy-cheatbook.github.io/programming/intro-data.html">Cheat Book — Intro: Your Data</a> ·
+<a href="https://docs.rs/bevy/latest/bevy/ecs/world/struct.World.html">docs.rs — World</a></p>
+
+<!-- 2 -->
+<h2 id="vues"><span class="n">02</span>Les systèmes ne touchent jamais le World — ils déclarent des vues</h2>
+<p>Reprends un de <em>tes</em> systèmes (<code>hud.rs</code>) :</p>
+<pre><span class="kw">fn</span> <span class="fn">update_hud</span>(kills: <span class="ty">Res</span>&lt;<span class="ty">Kills</span>&gt;, <span class="kw">mut</span> query: <span class="ty">Query</span>&lt;&amp;<span class="kw">mut</span> <span class="ty">Text</span>, <span class="ty">With</span>&lt;<span class="ty">KillsText</span>&gt;&gt;)</pre>
+<p>Ces paramètres ne sont pas des données que tu passes : ce sont des <b>déclarations d'accès</b>
+(fiche 05). Avant d'exécuter le système, l'ordonnanceur lit la signature et lui <b>prête une vue
+étroite</b> sur le World : exactement ce qu'il a demandé, rien de plus.</p>
+<p>Pourquoi cette indirection ? <b>Le parallélisme.</b> Puisque Bevy connaît les accès de chaque
+système, il peut en faire tourner plusieurs en même temps dès qu'ils ne se marchent pas dessus.
+C'est la règle d'emprunt de Rust, appliquée par l'ordonnanceur aux données du World :</p>
+<div class="card" style="text-align:center">
+  <b>N lecteurs</b> en même temps &nbsp;<span style="color:var(--muted)">OU</span>&nbsp; <b>1 seul écrivain</b>
+  <p style="margin:.6em 0 0;color:var(--muted);font-size:.9rem">— jamais un écrivain avec qui que ce soit d'autre sur la même donnée.</p>
+</div>
+<p>Exemple concret dans BAGARR : <code>update_hud</code> (lit <code>Kills</code>, écrit les
+<code>Text</code>) et <code>move_player</code> (écrit le <code>Transform</code> du joueur) touchent
+des données disjointes → Bevy a le droit de les exécuter <b>simultanément sur deux threads</b>. Tu
+n'as rien demandé : la signature suffit.</p>
+<p>Et c'est aussi pour ça que ton <code>Without&lt;Player&gt;</code> dans <code>update_enemies</code>
+est <b>obligatoire</b> : sans lui, une query <code>&amp;mut Transform</code> et une query
+<code>&amp;Transform</code> pourraient viser la même entité — un écrivain + un lecteur sur la même
+donnée, interdit. Le filtre <em>prouve</em> à Bevy que les deux ensembles d'entités sont disjoints.</p>
+
+<div class="quiz" data-key="b">
+  <div class="q">Deux systèmes prennent chacun <code>Query&lt;&amp;Transform, With&lt;Enemy&gt;&gt;</code>
+  (lecture seule, mêmes entités). Bevy peut-il les paralléliser ?</div>
+  <button class="opt" data-k="a">Non : ils visent les mêmes entités → conflit</button>
+  <button class="opt" data-k="b">Oui : deux lectures ne se gênent jamais, même sur les mêmes données</button>
+  <button class="opt" data-k="c">Seulement si on ajoute <code>Without</code> quelque part</button>
+  <div class="fb"></div>
+</div>
+
+<!-- 3 -->
+<h2 id="commands"><span class="n">03</span><code>Commands</code> : la file d'attente des changements de structure</h2>
+<p>Une vue prêtée permet de <b>lire et modifier des valeurs existantes</b>. Mais il y a une chose
+qu'elle ne permet pas : <b>changer la structure</b> du World — spawner une entité, en despawner une,
+insérer une resource. Pourquoi ? Parce que pendant que ton système tourne, <em>d'autres systèmes
+tournent en parallèle</em> avec leurs propres vues ; modifier la structure sous leurs pieds les
+invaliderait.</p>
+<p>D'où <code>Commands</code> : ce n'est <b>pas un accès au World</b>, c'est une <b>file
+d'attente</b>. Quand tu écris <code>commands.spawn((Enemy, ...))</code> dans
+<code>spawn_enemies</code>, rien n'est créé sur le champ. Bevy note « à faire », et applique toute
+la file un peu plus tard, à un <b>point de synchronisation</b> — un moment où il reprend l'accès
+complet et exclusif au World entre deux groupes de systèmes.</p>
+<div class="note"><span class="tag">Conséquence concrète</span> Une entité spawnée via
+<code>Commands</code> n'est <b>pas visible</b> par les queries des systèmes qui tournent avant le
+prochain point de synchro. Si un jour un ennemi « n'existe pas encore » dans un autre système de la
+même frame, tu sauras pourquoi — ce n'est pas un bug, c'est le différé.</div>
+<p class="cite">Source : <a href="https://bevy-cheatbook.github.io/programming/commands.html">Cheat Book — Commands</a></p>
+
+<div class="quiz" data-key="c">
+  <div class="q"><code>commands.despawn()</code> est appelé sur un ennemi dans ton système
+  <code>attack</code>. Quand l'ennemi disparaît-il réellement du World ?</div>
+  <button class="opt" data-k="a">Immédiatement, à la ligne du <code>despawn()</code></button>
+  <button class="opt" data-k="b">À la fin de la frame, juste avant le rendu</button>
+  <button class="opt" data-k="c">Au prochain point de synchronisation, quand Bevy applique la file des Commands</button>
+  <div class="fb"></div>
+</div>
+
+<!-- 4 -->
+<h2 id="cle"><span class="n">04</span><code>&amp;mut World</code> : la clé maîtresse</h2>
+<p>Dernier niveau : recevoir <code>&amp;mut World</code> directement. C'est l'accès <b>exclusif</b> à
+absolument tout — sans vue, sans file d'attente… et donc <b>sans parallélisme</b> : rien d'autre ne
+tourne pendant ce temps.</p>
+<p>Tu le croises à deux endroits :</p>
+<ul>
+  <li><b><code>FromWorld</code></b> — le trait derrière <code>init_resource</code>. C'est
+  « <code>Default</code>, mais avec le droit de fouiller le World pendant la construction ».
+  Indispensable quand une resource ne peut pas se construire à partir de rien — ton
+  <code>EnemyAssets</code> doit aller piocher dans <code>Assets&lt;Mesh&gt;</code> :
+<pre><span class="kw">impl</span> <span class="ty">FromWorld</span> <span class="kw">for</span> <span class="ty">EnemyAssets</span> {
+    <span class="kw">fn</span> <span class="fn">from_world</span>(world: &amp;<span class="kw">mut</span> <span class="ty">World</span>) -&gt; <span class="ty">Self</span> {
+        <span class="c">// seul au monde : accès direct, séquentiel, à n'importe quelle resource</span>
+        <span class="kw">let</span> <span class="kw">mut</span> meshes = world.resource_mut::&lt;<span class="ty">Assets</span>&lt;<span class="ty">Mesh</span>&gt;&gt;();
+        <span class="c">// ...</span>
+    }
+}</pre></li>
+  <li><b>Les systèmes exclusifs</b> — un système dont le paramètre est <code>&amp;mut World</code>.
+  Rare, réservé aux cas où on doit tout manipuler d'un coup (sauvegarde, reset complet…).</li>
+</ul>
+<p>Le prix de la clé maîtresse : <b>tout est à l'arrêt</b>. Parfait pour de l'initialisation qui
+tourne une fois au démarrage ; mauvaise idée pour du code de frame.</p>
+<div class="note"><span class="tag">Borrow checker</span> Dans <code>from_world</code>, tu ne peux pas
+tenir <em>deux</em> <code>world.resource_mut::&lt;…&gt;()</code> en même temps : deux emprunts
+mutables du même <code>world</code>, E0499. La parade est simple — termine l'un (récupère ton
+<code>Handle</code>, qui lui n'emprunte rien), <em>puis</em> ouvre l'autre. Séquentiel, pas simultané.</div>
+<p class="cite">Sources : <a href="https://bevy-cheatbook.github.io/programming/world.html">Cheat Book — Direct World Access</a> ·
+<a href="https://bevy-cheatbook.github.io/programming/exclusive.html">Cheat Book — Exclusive Systems</a> ·
+<a href="https://docs.rs/bevy/latest/bevy/ecs/world/trait.FromWorld.html">docs.rs — FromWorld</a></p>
+
+<!-- 5 -->
+<h2 id="niveaux"><span class="n">05</span>Les trois niveaux d'accès, côte à côte</h2>
+<div class="levels">
+  <div class="lvl l1">
+    <h4>Res / Query</h4>
+    <p><b>Vue étroite prêtée</b></p>
+    <p>Parallélisable. Le quotidien : 99% de tes systèmes.</p>
+  </div>
+  <div class="lvl l2">
+    <h4>Commands</h4>
+    <p><b>File différée</b></p>
+    <p>Changements de structure (spawn, despawn, insert_resource) appliqués au prochain point de synchro.</p>
+  </div>
+  <div class="lvl l3">
+    <h4>&amp;mut World</h4>
+    <p><b>Clé maîtresse</b></p>
+    <p>Exclusif, tout à l'arrêt. <code>FromWorld</code>, systèmes exclusifs. Init, pas du code de frame.</p>
+  </div>
+</div>
+
+<div class="quiz" data-key="a">
+  <div class="q">Pourquoi ne pas écrire toute la logique du jeu dans des systèmes exclusifs
+  (<code>&amp;mut World</code>) ? Ce serait plus simple, non ?</div>
+  <button class="opt" data-k="a">On perdrait tout le parallélisme : chaque système exclusif met le monde entier à l'arrêt</button>
+  <button class="opt" data-k="b">C'est interdit par le compilateur au-delà d'un système</button>
+  <button class="opt" data-k="c">Les systèmes exclusifs ne peuvent pas modifier les resources</button>
+  <div class="fb"></div>
+</div>
+
+<div class="try"><span class="tag">Essaie ça</span>
+<b>Provoque le conflit toi-même.</b> Dans <code>update_enemies</code> (<code>enemy.rs</code>),
+supprime le <code>Without&lt;Player&gt;</code> de la query des ennemis, puis lance <code>cargo r</code>.
+Tu obtiens un <b>panic au démarrage</b> mentionnant l'erreur <code>B0001</code> : Bevy refuse un
+système dont les deux queries pourraient viser la même entité avec un accès
+<code>&amp;mut</code> + <code>&amp;</code>. Lis le message en entier — il t'explique lui-même les deux
+parades (<code>Without</code>, ou <code>ParamSet</code>). Puis remets le filtre. Tu viens de voir
+l'ordonnanceur défendre la règle « N lecteurs OU 1 écrivain » <em>à l'exécution</em>.</div>
+
+<h2 id="recap"><span class="n">✦</span>Récap</h2>
+<div class="card"><p style="margin:0">Le <b><code>World</code></b> est la base de données unique qui possède
+tout l'état du jeu. Les systèmes n'y touchent jamais directement : leurs signatures <b>déclarent des
+accès</b>, et l'ordonnanceur leur prête des <b>vues étroites</b> — ce qui lui permet de paralléliser
+tout ce qui ne se conflit pas (<b>N lecteurs OU 1 écrivain</b>). Les changements de <b>structure</b>
+passent par <b><code>Commands</code></b>, une file différée appliquée aux points de synchronisation.
+Et <b><code>&amp;mut World</code></b> est la clé maîtresse — exclusive, tout à l'arrêt — qu'on ne
+sort que pour l'initialisation (<code>FromWorld</code>) ou les rares systèmes exclusifs.</p></div>
+
+<p style="margin-top:28px;color:var(--muted)">Une question en suspens ? Pose-la à ton agent — cette
+fiche est née d'une conversation, elle peut en nourrir d'autres.</p>
+
+<footer>
+  <p><b>Sources</b> (dans <code>teach/RESOURCES.md</code>) :
+  <a href="https://bevy-cheatbook.github.io/programming/intro-data.html">Cheat Book — Intro: Your Data</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/world.html">Direct World Access</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/exclusive.html">Exclusive Systems</a> ·
+  <a href="https://bevy-cheatbook.github.io/programming/commands.html">Commands</a> ·
+  <a href="https://docs.rs/bevy/latest/bevy/ecs/world/struct.World.html">docs.rs — World</a> ·
+  <a href="https://docs.rs/bevy/latest/bevy/ecs/world/trait.FromWorld.html">docs.rs — FromWorld</a></p>
+  <p>BAGARR · carnet <code>teach/</code> · fiche 09</p>
+</footer>
+</div>
+
+<script>
+const pbar=document.getElementById('pbar');
+addEventListener('scroll',()=>{const h=document.documentElement;pbar.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+
+document.querySelectorAll('.quiz').forEach(q=>{
+  const key=q.dataset.key,fb=q.querySelector('.fb');
+  const msg={
+    b:"Deux lectures (&T) sur les mêmes données sont sûres → parallélisables. Le conflit n'existe qu'à partir du moment où quelqu'un écrit.",
+    c:"Commands est une file : le despawn est noté, puis appliqué au prochain point de synchronisation, quand Bevy reprend l'accès exclusif au World.",
+    a:"Un système exclusif verrouille le World entier : rien d'autre ne tourne. En chaîner partout = un jeu 100% séquentiel. Les vues (Res/Query) existent précisément pour éviter ça.",
+  };
+  q.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{
+    q.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.k===key)x.classList.add('correct');});
+    const ok=o.dataset.k===key;if(!ok)o.classList.add('wrong');
+    fb.textContent=(ok?"✅ ":"❌ ")+(msg[key]||"");fb.classList.add('show');
+  });
+});
+</script>
+</body>
+</html>

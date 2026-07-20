@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Resource, Default)]
-pub struct Kills(pub u32);
+use crate::combat::Kills;
 
 #[derive(Component)]
 pub struct KillsText;
@@ -10,9 +9,8 @@ pub struct HudPlugin;
 
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Kills>()
-            .add_systems(Startup, spawn_hud)
-            .add_systems(Update, update_hud);
+        app.add_systems(Startup, spawn_hud)
+            .add_systems(Update, update_hud.run_if(resource_changed::<Kills>));
     }
 }
 
