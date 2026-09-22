@@ -1,13 +1,12 @@
-use std::time::Duration;
-
 use bevy::{prelude::*, window::PrimaryWindow};
 
-use crate::combat::Hitbox;
+use crate::combat::{Health, Hitbox};
 
 const PLAYER_COLOR: Color = Color::srgb(0.1, 0.9, 0.2);
 const PLAYER_SHAPE: Vec2 = Vec2::new(50.0, 50.0);
 const PLAYER_SPEED: f32 = 500.0;
 const PLAYER_RADIUS: f32 = 25.0;
+const PLAYER_HEALTH: f32 = 100.0;
 
 pub const PLAYER_INVULNERABILITY_SECS: f32 = 2.0;
 
@@ -28,6 +27,7 @@ fn spawn_player(mut commands: Commands) {
         Player,
         Sprite::from_color(PLAYER_COLOR, PLAYER_SHAPE),
         Hitbox(PLAYER_RADIUS),
+        Health(PLAYER_HEALTH),
     ));
 }
 
