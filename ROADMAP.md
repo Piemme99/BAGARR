@@ -53,8 +53,8 @@ mais **le MVP jouable passe avant le polish**.
 - [x] Détecter le clic gauche + convertir la position curseur en coordonnées monde (`viewport_to_world_2d`, `run_if(input_just_pressed)`)
 - [x] Zone de coup circulaire projetée devant le joueur vers le curseur (cooldown reporté — clic manuel = cadence naturelle)
 - [x] Tuer les ennemis touchés (collision cercle-cercle maison via `distance_squared`, `despawn`)
-- [ ] Contact ennemi↔joueur (pour l'instant : sans effet, juste détecté)
-- **Concepts** : `Window`/`Camera` → `viewport_to_world_2d`, `MouseButton`, `run_if`/run conditions, `despawn`, `Gizmos` (debug), collisions maison, fonctions partagées
+- [x] Contact ennemi↔joueur (composant `Hitbox(f32)` sur joueur et ennemis, `are_colliding` cercle-cercle pur + tests unitaires)
+- **Concepts** : `Window`/`Camera` → `viewport_to_world_2d`, `MouseButton`, `run_if`/run conditions, `despawn`, collisions maison, fonctions partagées, **frontière système / calcul pur** (les `Query` ne descendent pas dans les helpers), premier composant porteur de donnée, `#[cfg(test)]` + `use super::*`
 
 ## Phase 4 — Boucle jouable 🎯
 
@@ -71,11 +71,13 @@ Piochées selon l'envie, pour explorer d'autres pans de Bevy :
 
 - [ ] Sprites à la place des formes (chargement d'assets, `AssetServer`)
 - [ ] Animations de sprites (spritesheets, `TextureAtlas`, timer d'animation)
-- [ ] PV du joueur + game-over + écran de fin (`States`)
+- [x] PV du joueur : `Health(f32)`, dégât au contact, invulnérabilité brève (`Invulnerable(Timer)` inséré/retiré via `Commands`, filtre `Without<Invulnerable>`) — *écrit et compilé le 2026-09-22, à vérifier en jeu*
+- [ ] Affichage des PV dans le HUD (`Changed<Health>` ou événement — cf. fiche 08)
+- [ ] Game over + écran de fin (`States` : `init_state`, `NextState`, `OnEnter`, `in_state`, `DespawnOnExit`)
 - [ ] Feedback : flash de dégât, petites particules, camera shake
 - [ ] Sons (coups, morts d'ennemis)
 - [ ] Vagues de difficulté croissante
 - [ ] Menu de démarrage
 - [ ] Plusieurs types d'ennemis
 
-_Maintenu par Claude. Dernière mise à jour : 2026-07-04._
+_Maintenu par Claude. Dernière mise à jour : 2026-09-22._

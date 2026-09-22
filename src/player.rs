@@ -1,8 +1,15 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, window::PrimaryWindow};
+
+use crate::combat::Hitbox;
 
 const PLAYER_COLOR: Color = Color::srgb(0.1, 0.9, 0.2);
 const PLAYER_SHAPE: Vec2 = Vec2::new(50.0, 50.0);
 const PLAYER_SPEED: f32 = 500.0;
+const PLAYER_RADIUS: f32 = 25.0;
+
+pub const PLAYER_INVULNERABILITY_SECS: f32 = 2.0;
 
 #[derive(Component)]
 pub struct Player;
@@ -17,7 +24,11 @@ impl Plugin for PlayerPlugin {
 }
 
 fn spawn_player(mut commands: Commands) {
-    commands.spawn((Player, Sprite::from_color(PLAYER_COLOR, PLAYER_SHAPE)));
+    commands.spawn((
+        Player,
+        Sprite::from_color(PLAYER_COLOR, PLAYER_SHAPE),
+        Hitbox(PLAYER_RADIUS),
+    ));
 }
 
 fn move_player(

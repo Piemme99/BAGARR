@@ -1,7 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use rand::RngExt;
 
-use crate::player::Player;
+use crate::{combat::Hitbox, player::Player};
 
 const ENEMY_COLOR: Color = Color::srgb(0.9, 0.1, 0.2);
 const ENEMY_SHAPE: Triangle2d = Triangle2d::new(
@@ -10,6 +10,7 @@ const ENEMY_SHAPE: Triangle2d = Triangle2d::new(
     Vec2::new(16.0, -20.0),
 );
 const ENEMY_SPEED: f32 = 150.0;
+const ENEMY_RADIUS: f32 = 25.0;
 
 #[derive(Component)]
 pub struct Enemy;
@@ -70,6 +71,7 @@ fn spawn_enemies(
             Transform::from_translation(
                 generate_random_enemy_position(half_window, &mut rand::rng()).extend(0.0),
             ),
+            Hitbox(ENEMY_RADIUS),
         ));
     }
 }
