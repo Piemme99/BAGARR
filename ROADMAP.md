@@ -71,7 +71,7 @@ Piochées selon l'envie, pour explorer d'autres pans de Bevy :
 
 - [ ] Sprites à la place des formes (chargement d'assets, `AssetServer`)
 - [ ] Animations de sprites (spritesheets, `TextureAtlas`, timer d'animation)
-- [x] PV du joueur : `Health(f32)`, dégât au contact, invulnérabilité brève (`Invulnerable(Timer)` inséré/retiré via `Commands`, filtre `Without<Invulnerable>`) — *écrit et compilé le 2026-09-22, à vérifier en jeu*
+- [x] PV du joueur : `Health(f32)`, dégât au contact, invulnérabilité brève (`Invulnerable(Timer)` inséré/retiré via `Commands`, filtre `Without<Invulnerable>`) — vérifié en jeu le 2026-09-22
 - [ ] Affichage des PV dans le HUD (`Changed<Health>` ou événement — cf. fiche 08)
 - [ ] Game over + écran de fin (`States` : `init_state`, `NextState`, `OnEnter`, `in_state`, `DespawnOnExit`)
 - [ ] Feedback : flash de dégât, petites particules, camera shake
